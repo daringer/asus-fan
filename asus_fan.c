@@ -11,7 +11,7 @@
  *  PLEASE USE WITH CAUTION, you can easily overheat your machine with a wrong
  *  manually set fan speed...
  *  
-*/
+**/
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -25,6 +25,12 @@ MODULE_DESCRIPTION("ASUS fan driver");
 MODULE_LICENSE("GPL");
 
 static struct thermal_cooling_device *cdev;
+
+static int fan_get_max_state(struct thermal_cooling_device *cdev, unsigned long *state);
+static int fan_set_auto(struct thermal_cooling_device *cdev);
+static int fan_set(struct thermal_cooling_device *cdev, int fan, int speed);
+static int fan_set_cur_state(struct thermal_cooling_device *cdev, unsigned long state);
+
 
 static int fan_get_max_state(struct thermal_cooling_device *cdev,
 		unsigned long *state)
