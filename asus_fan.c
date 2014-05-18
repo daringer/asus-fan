@@ -7,6 +7,10 @@
  *  If the modules loads succesfully it will bring up a "thermal_cooling_device"
  *  like /sys/devices/virtual/thermal/cooling_deviceX/ mostly providing
  *  cur_state / max_state
+ *
+ *  PLEASE USE WITH CAUTION, you can easily overheat your machine with a wrong
+ *  manually set fan speed...
+ *  
 */
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -16,6 +20,7 @@
 #include <linux/dmi.h>
 
 MODULE_AUTHOR("Felipe Contreras <felipe.contreras@gmail.com>");
+MODULE_AUTHOR("Markus Meissner <coder@safemailbox.de>");
 MODULE_DESCRIPTION("ASUS fan driver");
 MODULE_LICENSE("GPL");
 
@@ -69,7 +74,11 @@ static int fan_set(struct thermal_cooling_device *cdev, int fan, int speed)
 static int fan_set_cur_state(struct thermal_cooling_device *cdev,
 		unsigned long state)
 {
-	return fan_set(cdev, 1, state);
+	// setting fan to automatic, if cur_state is set to (0x0100) 256
+	if(state == 256)
+		return fan_set_auto(cdev);
+	else
+		return fan_set(cdev, 1, state);
 }
 
 static int fan_set_auto(struct thermal_cooling_device *cdev)
