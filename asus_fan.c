@@ -1,16 +1,13 @@
-/*
+/**
+ *  ASUS Zenbook Fan control module, verified with:
+ *  - UX32VD Zenbook
+ *  - ....
  *
- * obj-m := fan.o
- * KDIR := /lib/modules/$(shell uname -r)/build
- * PWD := $(shell pwd)
- * 
- * all:
- * 	$(MAKE) -C $(KDIR) M=$(PWD) modules
- * 
- * clean:
- * 	$(MAKE) -C $(KDIR) M=$(PWD) clean
- */
-
+ *  Just 'make' and copy the fan.ko file to /lib/modules/`uname -r`/...
+ *  If the modules loads succesfully it will bring up a "thermal_cooling_device"
+ *  like /sys/devices/virtual/thermal/cooling_deviceX/ mostly providing
+ *  cur_state / max_state
+*/
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
