@@ -8,4 +8,7 @@ all:
 install:
 	# just copy the .ko file anywhere below:
 	# /lib/modules/$(uname -r)/
+	#
+	# finally add it to some on-boot-load-mechanism
+	# the module will _not_ automatically load.
 

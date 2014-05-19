@@ -30,6 +30,8 @@ static int fan_get_max_state(struct thermal_cooling_device *cdev, unsigned long 
 static int fan_set_auto(struct thermal_cooling_device *cdev);
 static int fan_set(struct thermal_cooling_device *cdev, int fan, int speed);
 static int fan_set_cur_state(struct thermal_cooling_device *cdev, unsigned long state);
+static void __exit fan_exit(void);
+static int __init fan_init(void);
 
 
 static int fan_get_max_state(struct thermal_cooling_device *cdev,
