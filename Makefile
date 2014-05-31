@@ -11,4 +11,3 @@ install:
 	#
 	# finally add it to some on-boot-load-mechanism
 	# the module will _not_ automatically load.
-
