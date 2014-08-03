@@ -98,7 +98,7 @@ static const struct thermal_cooling_device_ops fan_cooling_ops = {
 	.get_max_state = fan_get_max_state,
 	.get_cur_state = fan_get_cur_state,
 	.set_cur_state = fan_set_cur_state,
-};
+}
 
 static int __init fan_init(void)
 {
