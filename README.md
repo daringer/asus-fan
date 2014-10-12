@@ -22,12 +22,14 @@ modprobe asus_fan
 - **Find X** - the X changes from boot to boot, a small bash script is found inside 
   the repository as a simpler interface, the directory is easy to get though:
 ```bash
-fpath=$(grep -r Fan /sys/devices/virtual/thermal/cooling_device*/type 2> /dev/null | cut -d ":" -f 1 | xargs dirname)
+basepath=/sys/devices/virtual/thermal/
+fpath=$(grep -r Fan ${basepath}/cooling_device*/type 2> /dev/null | \
+        cut -d ":" -f 1 | xargs dirname)
 ```
 - **Read Fan** - the files "cur_state", "max_state" provide the obvious, ranging from 0 - 255:
 ```bash
-cat ${fpath}/cur_state
-cat ${fpath}/max_state
+cat ${fpath}/cur_state          # get current fan speed
+cat ${fpath}/max_state          # get max fan speed
 ```
 - **Set Fan Speed** - write anything from 0 to 255 to "cur_state", like: 
 ```bash
