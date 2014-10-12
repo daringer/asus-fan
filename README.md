@@ -1,5 +1,10 @@
-asus-fan  --  ASUS (Zenbook) fan controller kernel module
-=========================================================
+asus-fan
+========
+
+ASUS (Zenbook) fan control kernel module
+
+
+
 
 Quickstart
 ----------
