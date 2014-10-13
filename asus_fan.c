@@ -28,25 +28,27 @@ static struct thermal_cooling_device *cdev;
 static int last_state;
 static bool is_manual;
 
-static int fan_get_max_state(struct thermal_cooling_device *cdev, unsigned long *state);
+static int fan_get_max_state(struct thermal_cooling_device *cdev,
+			     unsigned long *state);
 static int fan_set_auto(struct thermal_cooling_device *cdev);
 static int fan_set(struct thermal_cooling_device *cdev, int fan, int speed);
-static int fan_set_cur_state(struct thermal_cooling_device *cdev, unsigned long state);
+static int fan_set_cur_state(struct thermal_cooling_device *cdev,
+			     unsigned long state);
 static void __exit fan_exit(void);
 static int __init fan_init(void);
 
 static int fan_get_max_state(struct thermal_cooling_device *cdev,
-		unsigned long *state)
+			     unsigned long *state)
 {
 	*state = 0xff;
 	return 0;
 }
 
 static int fan_get_cur_state(struct thermal_cooling_device *cdev,
-		unsigned long *state)
+			     unsigned long *state)
 {
 
- 	struct acpi_object_list params;
+	struct acpi_object_list params;
 	union acpi_object in_objs[1];
 	unsigned long long value;
 	acpi_status r;
@@ -55,12 +57,12 @@ static int fan_get_cur_state(struct thermal_cooling_device *cdev,
 	params.pointer = in_objs;
 	in_objs[0].type = ACPI_TYPE_INTEGER;
 	in_objs[0].integer.value = 0;
- 
-  // fan does not report during manual speed setting - so fake it!
-  if (is_manual) {
-    *state = last_state;
-    return 0;
-  }
+
+	// fan does not report during manual speed setting - so fake it!
+	if (is_manual) {
+		*state = last_state;
+		return 0;
+	}
 
 	r = acpi_evaluate_integer(NULL, "\\_TZ.RFAN", &params, &value);
 	if (r != AE_OK)
@@ -84,24 +86,25 @@ static int fan_set(struct thermal_cooling_device *cdev, int fan, int speed)
 	in_objs[1].type = ACPI_TYPE_INTEGER;
 	in_objs[1].integer.value = speed;
 
-	return acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
+	return acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params,
+				     &value);
 }
 
 static int fan_set_cur_state(struct thermal_cooling_device *cdev,
-		unsigned long state)
+			     unsigned long state)
 {
-  
-  last_state = state;
+
+	last_state = state;
 
 	// setting fan to automatic, if cur_state is set to (0x0100) 256
-	if(state == 256) {
-    is_manual = false;
+	if (state == 256) {
+		is_manual = false;
 		return fan_set_auto(cdev);
-  } else {
-    is_manual = true;
+	} else {
+		is_manual = true;
 		return fan_set(cdev, 1, state);
-  }
-  
+	}
+
 }
 
 static int fan_set_auto(struct thermal_cooling_device *cdev)
@@ -117,11 +120,12 @@ static const struct thermal_cooling_device_ops fan_cooling_ops = {
 
 static int __init fan_init(void)
 {
-	if (strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC."))
+	if (strcmp
+	    (dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC."))
 		return -ENODEV;
 	cdev = thermal_cooling_device_register("Fan", NULL, &fan_cooling_ops);
-  last_state = -1;
-  is_manual = false;
+	last_state = -1;
+	is_manual = false;
 	if (IS_ERR(cdev))
 		return PTR_ERR(cdev);
 	fan_set_auto(cdev);
