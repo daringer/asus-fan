@@ -27,6 +27,7 @@ MODULE_LICENSE("GPL");
 static struct thermal_cooling_device *cdev;
 static int last_state;
 static bool is_manual;
+static bool has_gfx_fan;
 
 static int fan_get_max_state(struct thermal_cooling_device *cdev,
 			     unsigned long *state);
@@ -120,9 +121,31 @@ static const struct thermal_cooling_device_ops fan_cooling_ops = {
 
 static int __init fan_init(void)
 {
-	if (strcmp
-	    (dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC."))
+	if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")){
+    const char* name = dmi_get_system_info(DMI_PRODUCT_NAME);
+    if(strcmp(name, "UX21")) {
+      has_gfx_fan = false;
+    } else if(!strcmp(name, "UX31E") || 
+        !strcmp(name, "UX301LA") ||
+        !strcmp(name, "UX21A") ||
+        !strcmp(name, "UX31A") ||
+        !strcmp(name, "UX32A") ||
+        !strcmp(name, "UX42VS")) {
+      has_gfx_fan = false;
+    } else if(!strcmp(name, "UX32VD") ||
+            !strcmp(name, "UX52VS") ||
+            !strcmp(name, "UX500VZ") ||
+            !strcmp(name, "NX500")) {
+      has_gfx_fan = true;
+    } else {
+      printk(KERN_INFO "asus-fan init - product name: '%s' unknown!\n", name);
+      printk(KERN_INFO "asus-fan init - aborting!\n");
+      return -ENODEV;
+    }
+    
+  } else 
 		return -ENODEV;
+
 	cdev = thermal_cooling_device_register("Fan", NULL, &fan_cooling_ops);
 	last_state = -1;
 	is_manual = false;
