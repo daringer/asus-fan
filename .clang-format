@@ -1,7 +1,7 @@
 ---
 # BasedOnStyle:  Google
 
-#Language: Cpp
+Language: C
 #AllowShortFunctionsOnASingleLine: None
 #AllowShortBlocksOnASingleLine: false
 
