@@ -1,9 +1,17 @@
 asus-fan
 ========
 
-ASUS (Zenbook) fan control kernel module
+ASUS (Zenbook) fan(s) control kernel module.
+The following Zenbooks are supported:
 
-
+Single Fan | Two Fans (NVIDIA)
+-----------|-------------------
+UX21E      | UX32VD 
+UX31E      | UX42VS
+UX21A      | UX52VS
+UX31A      | U500VZ
+UX32A      | NX500
+UX301LA    |
 
 
 Quickstart
@@ -20,15 +28,17 @@ depmod -a
 ```bash
 modprobe asus_fan
 ```
-- **Interface** - the fan is exposed as ```cooling_device```, thus available in:
+- **Interface** - the fan(s) is/are exposed as ```cooling_device```, thus available in:
 ```bash
 /sys/devices/virtual/thermal/cooling_deviceX/
 ```
 - **Find X** - the ```X``` changes from boot to boot, a small bash script is found inside 
-  the repository as a simpler interface - it is more or less a one-liner:
+  the repository as a simpler interface:
 ```bash
 basepath=/sys/devices/virtual/thermal/
-fpath=$(grep -r Fan ${basepath}/cooling_device*/type 2> /dev/null | \
+fpath=$(grep -r '^Fan$' ${basepath}/cooling_device*/type 2> /dev/null | \
+        cut -d ":" -f 1 | xargs dirname)
+gfxfanpath=$(grep -r '^GFX Fan$' ${basepath}/cooling_device*/type 2> /dev/null | \
         cut -d ":" -f 1 | xargs dirname)
 ```
 - **Read Fan** - the files ```cur_state```, ```max_state``` provide the obvious, ranging from 0 - 255:
@@ -45,16 +55,14 @@ echo 255 > ${fpath}/cur_state   # set to max speed
 - **ATTENTION** - the fan is now in manual mode - do not burn your machine!
 - **Set Auto-Fan(s)**: to reactivate the automatic fan control write "256" to ```cur_state```: 
 ```bash
-echo 256 > ${fpath}/cur_state   # reset to auto-mode
+echo 256 > ${fpath}/cur_state   # reset to auto-mode (always for all fans)
 ```
-
 
 **TODOs**:
 ----------
-- expose two cooling_devices, if a second fan exists (Zenbooks with an NVIDIA GPU)
 - expose fan RPMs (once I get to know where, cooling_device api allows only cur/max_state)
-- read and set threshold for maximum speed while automatically controlled
-- submit an upstream patch - any howtos ??? 
+- read and set threshold for maximum speed while automatically controlled (actually works, but have no idea how to interface with the userland, thermal_cooling_device_* function family seems to not provide anything beside cur-/max_state files inside /sys/...
+- submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??
 
 
 **THANKS TO**:
