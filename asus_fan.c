@@ -211,25 +211,6 @@ static int fan_set_cur_state(struct thermal_cooling_device *cdev,
 static int fan_get_max_speed(struct thermal_cooling_device *cdev,
                              unsigned long *state) {
 
-#if 0
-  ////// always returns 255, regardless of which max was set before :/
-  ////// ignore this approach and simply safe a set max value!
-
-	unsigned long long value;
-	acpi_status ret;
-  // obtaining the current max fan speed
-  // - by trying SB.QFAN read without any arguments...
-  params.count = 0;
-  params.pointer = NULL;
-  
-  // acpi call
-  if((ret = acpi_evaluate_integer(NULL, "\\_SB.QFAN", &params, &value)) != AE_OK) {
-    printk(KERN_INFO "asus-fan (get_max) - getting max fan speed failed! 
-                      errcode: %d", ret);
-		return ret;
-  }
-  *state = value;
-#endif
   *state = max_fan_speed_setting;
   return 0;
 }
@@ -259,7 +240,7 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     args[0].integer.value = arg_qmod;
 
     // acpi call
-    ret = acpi_evaluate_integer(NULL, "\\_SB.ATKD.QMOD", &params, &value)
+    ret = acpi_evaluate_integer(NULL, "\\_SB.ATKD.QMOD", &params, &value);
     if(ret != AE_OK) {
       printk(KERN_INFO
              "asus-fan (set_max_speed) - set max fan speed(s) failed (force "
@@ -281,7 +262,7 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     args[0].integer.value = state;
 
     // acpi call
-    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST98", &params, &value)
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST98", &params, &value);
     if(ret != AE_OK) {
       printk(KERN_INFO
              "asus-fan (set_max_speed) - set max fan speed(s) failed (no "
@@ -321,7 +302,7 @@ static int fan_set_auto() {
   args[1].integer.value = 0;
 
   // acpi call
-  ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value)
+  ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
   if(ret != AE_OK) {
     printk(KERN_INFO
            "asus-fan (set_auto) - failed reseting fan(s) to auto-mode! "
@@ -392,7 +373,7 @@ static int __init fan_init(void) {
   }
 
   // set max-speed back to 'default'
-  ret = fan_set_max_speed(max_fan_speed_default, false)
+  ret = fan_set_max_speed(max_fan_speed_default, false);
   if (ret != AE_OK) {
     printk(KERN_INFO
            "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
