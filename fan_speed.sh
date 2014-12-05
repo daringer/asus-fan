@@ -2,10 +2,10 @@
 
 startpath="/sys/devices/virtual/thermal/"
 path1=$(grep -r '^Fan$' ${startpath}cooling_device*/type 2> /dev/null | \
-	cut -d ":" -f 1 | xargs dirname)
+	cut -d ":" -f 1 | xargs --no-run-if-empty dirname)
 
 path2=$(grep -r '^GFX Fan$' ${startpath}cooling_device*/type 2> /dev/null | \
-	cut -d ":" -f 1 | xargs dirname)
+	cut -d ":" -f 1 | xargs --no-run-if-empty dirname)
 
 function usage() {
   echo "Usage: `basename $0` [fan index] <action>"
