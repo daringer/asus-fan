@@ -37,9 +37,9 @@ modprobe asus_fan
 ```bash
 basepath=/sys/devices/virtual/thermal/
 fpath=$(grep -r '^Fan$' ${basepath}/cooling_device*/type 2> /dev/null | \
-        cut -d ":" -f 1 | xargs dirname)
+        cut -d ":" -f 1 | xargs  --no-run-if-empty dirname)
 gfxfanpath=$(grep -r '^GFX Fan$' ${basepath}/cooling_device*/type 2> /dev/null | \
-        cut -d ":" -f 1 | xargs dirname)
+        cut -d ":" -f 1 | xargs  --no-run-if-empty dirname)
 ```
 - **Read Fan** - the files ```cur_state```, ```max_state``` provide the obvious, ranging from 0 - 255:
 ```bash
