@@ -318,14 +318,14 @@ static int __init fan_init(void) {
   acpi_status ret;
 
   // identify system/model/platform
-  if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {  
+  if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
     const char *name = dmi_get_system_info(DMI_PRODUCT_NAME);
 
     // catching all (supported) Zenbooks _without_ a dedicated gfx-card
     if (!strcmp(name, "UX31E") || !strcmp(name, "UX21") ||
         !strcmp(name, "UX301LA") || !strcmp(name, "UX21A") ||
         !strcmp(name, "UX31A") || !strcmp(name, "UX32A") ||
-        !strcmp(name, "UX42VS")) {
+        !strcmp(name, "UX42VS") || !strcmp(name, "UX302LA")) {
       has_gfx_fan = false;
 
       // this branch represents the (supported) Zenbooks with a dedicated
