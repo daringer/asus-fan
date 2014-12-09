@@ -46,6 +46,8 @@ if [[ "$1" = "max" || "$1" = "full" || "$1" = "get_max" ]]; then
 	cat ${path}/max_state
 elif [[ "$1" = "cur" || "$1" = "get" || "$1" = "current" ]]; then
 	cat ${path}/cur_state
+elif [[ "$1" = "set" && "$2" == "auto" ]]; then
+    echo "256" > ${path}/cur_state
 elif [[ "$1" = "set" && "$2" != "" ]]; then
 	echo $2 > ${path}/cur_state
 else
