@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 startpath="/sys/devices/virtual/thermal/"
 path1=$(grep -r '^Fan$' ${startpath}cooling_device*/type 2> /dev/null | \
@@ -11,8 +11,8 @@ function usage() {
   echo "Usage: `basename $0` [fan index] <action>"
   echo ""
   echo "<< Arguments help >>"
-  echo "" 
-  echo "  [fan index]: (optional)" 
+  echo ""
+  echo "  [fan index]: (optional)"
   echo "  - defaults to 0 (regular, system fan index)"
   echo "  - if gfx-fan is available, set to '1' to use gfx-fan"
   echo "  <action>: (mandatory)"
@@ -43,15 +43,15 @@ fi
 
 
 if [[ "$1" = "max" || "$1" = "full" || "$1" = "get_max" ]]; then
-	cat ${path}/max_state 
+	cat ${path}/max_state
 elif [[ "$1" = "cur" || "$1" = "get" || "$1" = "current" ]]; then
 	cat ${path}/cur_state
 elif [[ "$1" = "set" && "$2" != "" ]]; then
 	echo $2 > ${path}/cur_state
-else 
+else
 	echo "Could not understand arguments - exiting..."
 	usage
 	exit 1;
-fi 
+fi
 
 exit 0;
