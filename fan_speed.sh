@@ -18,7 +18,7 @@ function usage() {
   echo "  <action>: (mandatory)"
   echo "  - get / cur[rent]      => return current speed"
   echo "  - set <value>          => set speed (0-255)"
-  echo "                         => set 256 to reactivate 'auto'-mode"
+  echo "                         => \"set 256\" or \"set auto\" to reactivate 'auto'-mode"
   echo "  - [get_]max            => returns maximum speed for fan"
 }
 
