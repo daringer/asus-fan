@@ -13,7 +13,7 @@ UX31A      | U500VZ
 UX32A      | NX500
 UX301LA    |
 UX302LA    |
-
+N551JK     |
 
 Quickstart
 ----------
