@@ -325,7 +325,8 @@ static int __init fan_init(void) {
     if (!strcmp(name, "UX31E") || !strcmp(name, "UX21") ||
         !strcmp(name, "UX301LA") || !strcmp(name, "UX21A") ||
         !strcmp(name, "UX31A") || !strcmp(name, "UX32A") ||
-        !strcmp(name, "UX42VS") || !strcmp(name, "UX302LA")) {
+        !strcmp(name, "UX42VS") || !strcmp(name, "UX302LA") ||
+        !strcmp(name, "N551JK")) {
       has_gfx_fan = false;
 
       // this branch represents the (supported) Zenbooks with a dedicated
