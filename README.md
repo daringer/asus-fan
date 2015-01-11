@@ -14,6 +14,7 @@ UX32A      | NX500
 UX301LA    |
 UX302LA    |
 N551JK     |
+N56JN      |
 
 Quickstart
 ----------
