@@ -62,4 +62,4 @@ Nevertheless that script did it worse for me than the original controller - thus
 **THANKS TO**:
 --------------
 - To Felipe Contreras (felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
--To Markus Meissner (daringer) for the asus_fan version with "thermal" interface - the hwmon version is a port of that one
+- To Markus Meissner (daringer) for the asus_fan version with "thermal" interface - the hwmon version is a port of that one
