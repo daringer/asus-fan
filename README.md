@@ -20,12 +20,7 @@ Quickstart
 ----------
 
 - **Build** - just run ```make``` inside the directory
-- **Install** - copy the resulting ```asus_fan.ko``` file somewhere below
-  ```/lib/modules/$(uname -r)/``` and rebuild module dependencies:
-```bash
-cp asus_fan.ko /lib/modules/$(uname -r)/
-depmod -a
-```
+- **Install** - run ```sudo make install``` inside the directory
 - **Load** - simply as usual:
 ```bash
 modprobe asus_fan

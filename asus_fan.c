@@ -245,7 +245,7 @@ static unsigned long long __fan_rpm(int fan)
   // Args:
   // - get speed from the fan with index 'fan'
   args[0].type = ACPI_TYPE_INTEGER;
-  args[0].integer.value = 0;
+  args[0].integer.value = fan;
 
     // acpi call
   ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params, &value);
