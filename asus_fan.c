@@ -442,10 +442,38 @@ static ssize_t fan_min_gfx(struct device *dev,
 }
 
 
+static ssize_t set_max_speed(	struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count)
+{
+    int state;
+    bool reset = false;
+    kstrtouint(buf, 10, &state);
+    if(state == 256)
+    {
+      reset = true;
+    }
+  fan_set_max_speed(state, reset);
+  return count;
+}
+
+
+static ssize_t get_max_speed(	struct device *dev,
+					struct device_attribute *attr,
+					char *buf) {
+  unsigned long state = 0;
+  fan_get_max_speed(&state);
+  return sprintf(buf, "%lu\n", state);
+}
+
+
+
 static DEVICE_ATTR(pwm1, S_IWUSR | S_IRUGO, fan_get_cur_state, fan_set_cur_state);
 static DEVICE_ATTR(fan1_min, S_IRUGO, fan_min, NULL);
 static DEVICE_ATTR(fan1_input, S_IRUGO, fan_rpm, NULL);
 static DEVICE_ATTR(fan1_label, S_IRUGO, fan_label, NULL);
+
+static DEVICE_ATTR(fan1_speed_max, S_IWUSR | S_IRUGO, get_max_speed, set_max_speed);
 
 static DEVICE_ATTR(pwm2, S_IWUSR | S_IRUGO, fan_get_cur_state_gfx, fan_set_cur_state_gfx);
 static DEVICE_ATTR(fan2_min, S_IRUGO, fan_min_gfx, NULL);
@@ -457,6 +485,8 @@ static struct attribute *hwmon_attributes[] = {
 	&dev_attr_fan1_min.attr,
 	&dev_attr_fan1_input.attr,
 	&dev_attr_fan1_label.attr,
+	
+	&dev_attr_fan1_speed_max.attr,	
 	NULL
 };
 
@@ -465,6 +495,9 @@ static struct attribute *hwmon_gfx_attributes[] = {
 	&dev_attr_fan1_min.attr,
 	&dev_attr_fan1_input.attr,
 	&dev_attr_fan1_label.attr,
+	
+	&dev_attr_fan1_speed_max.attr,	
+	
 	&dev_attr_pwm2.attr,
 	&dev_attr_fan2_min.attr,
 	&dev_attr_fan2_input.attr,

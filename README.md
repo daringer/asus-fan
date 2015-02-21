@@ -48,6 +48,8 @@ echo 256 > ${fpath}/pwmX   # reset to auto-mode (always for all fans)
 thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
 
+-**Max fan speed**-There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode. Value range: 0-255 reset value:256
+
 **TODOs**:
 ----------
 - read and set threshold for maximum speed while automatically controlled (actually works, but file has to be added to expose to userland)
