@@ -110,6 +110,13 @@ static int __fan_get_cur_state( int fan,
 static int __fan_set_cur_state(int fan,
                                unsigned long state);
 
+//get current mode (auto, manual, perhaps auto mode of module in future)
+static int __fan_get_cur_control_state( int fan,
+                               int *state);
+//switch between modes (auto, manual, perhaps auto mode of module in future)
+static int __fan_set_cur_control_state(int fan,
+                               int state);
+
 // regular fan api funcs
 static ssize_t fan_get_cur_state(	struct device *dev,
 				struct device_attribute *attr,
@@ -123,6 +130,22 @@ static ssize_t fan_get_cur_state_gfx(	struct device *dev,
 					struct device_attribute *attr,
 					char *buf);
 static ssize_t  fan_set_cur_state_gfx(	struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count);
+
+// regular fan api funcs
+static ssize_t fan_get_cur_control_state(	struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+static ssize_t fan_set_cur_control_state(	struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count);
+
+// gfx fan api funcs
+static ssize_t fan_get_cur_control_state_gfx(	struct device *dev,
+					struct device_attribute *attr,
+					char *buf);
+static ssize_t  fan_set_cur_control_state_gfx(	struct device *dev,
 					struct device_attribute *attr,
 					const char *buf, size_t count);
 
@@ -272,6 +295,21 @@ static int __fan_set_cur_state(int fan,
   }
 }
 
+static int __fan_get_cur_control_state(int fan,
+                               int *state) {
+    *state = fan_manual_mode[fan];
+    return 0;
+}
+
+static int __fan_set_cur_control_state(int fan,
+                               int state) {
+    if(state == 0)
+    {
+      return fan_set_auto();
+    }
+    return 0;
+}
+
 static int fan_set_speed(int fan, int speed) {
   // struct acpi_object_list params;
   union acpi_object args[2];
@@ -297,7 +335,6 @@ static int fan_set_speed(int fan, int speed) {
                                &value);
 }
 
-//TODO: calculate rpms for manual mode
 static unsigned long long __fan_rpm(int fan)
 {
   struct acpi_object_list params;
@@ -381,6 +418,43 @@ static ssize_t fan_set_cur_state(	struct device *dev,
   __fan_set_cur_state(0, state);
   return count;
 }
+
+
+static ssize_t fan_get_cur_control_state(	struct device *dev,
+					struct device_attribute *attr,
+					char *buf) {
+  int state = 0;
+  __fan_get_cur_control_state(0, &state);
+  return sprintf(buf, "%d\n", state);
+}
+
+static ssize_t fan_get_cur_control_state_gfx(	struct device *dev,
+					struct device_attribute *attr,
+					char *buf) {
+   int state = 0;
+  __fan_get_cur_control_state(1, &state);
+  return sprintf(buf, "%d\n", state);
+}
+
+
+static ssize_t fan_set_cur_control_state_gfx(	struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count) {
+    int state;
+    kstrtouint(buf, 10, &state);
+  __fan_set_cur_control_state( 1, state);
+  return count;
+}
+
+static ssize_t fan_set_cur_control_state(	struct device *dev,
+				struct device_attribute *attr,
+				const char *buf, size_t count) {
+  int state;
+  kstrtouint(buf, 10, &state);
+  __fan_set_cur_control_state(0, state);
+  return count;
+}
+
 
 // Reading the correct max fan speed does not work!
 // Setting a max value has the obvious effect, thus we 'fake'
@@ -547,6 +621,7 @@ static ssize_t get_max_speed(	struct device *dev,
 
 //Makros defining all possible hwmon attributes
 static DEVICE_ATTR(pwm1, S_IWUSR | S_IRUGO, fan_get_cur_state, fan_set_cur_state);
+static DEVICE_ATTR(pwm1_enable, S_IWUSR | S_IRUGO, fan_get_cur_control_state, fan_set_cur_control_state);
 static DEVICE_ATTR(fan1_min, S_IRUGO, fan_min, NULL);
 static DEVICE_ATTR(fan1_input, S_IRUGO, fan_rpm, NULL);
 static DEVICE_ATTR(fan1_label, S_IRUGO, fan_label, NULL);
@@ -554,6 +629,7 @@ static DEVICE_ATTR(fan1_label, S_IRUGO, fan_label, NULL);
 static DEVICE_ATTR(fan1_speed_max, S_IWUSR | S_IRUGO, get_max_speed, set_max_speed);
 
 static DEVICE_ATTR(pwm2, S_IWUSR | S_IRUGO, fan_get_cur_state_gfx, fan_set_cur_state_gfx);
+static DEVICE_ATTR(pwm2_enable, S_IWUSR | S_IRUGO, fan_get_cur_control_state_gfx, fan_set_cur_control_state_gfx);
 static DEVICE_ATTR(fan2_min, S_IRUGO, fan_min_gfx, NULL);
 static DEVICE_ATTR(fan2_input, S_IRUGO, fan_rpm_gfx, NULL);
 static DEVICE_ATTR(fan2_label, S_IRUGO, fan_label_gfx, NULL);
@@ -561,6 +637,7 @@ static DEVICE_ATTR(fan2_label, S_IRUGO, fan_label_gfx, NULL);
 //hwmon attributes without second fan
 static struct attribute *hwmon_attributes[] = {
 	&dev_attr_pwm1.attr,
+	&dev_attr_pwm1_enable.attr,
 	&dev_attr_fan1_min.attr,
 	&dev_attr_fan1_input.attr,
 	&dev_attr_fan1_label.attr,
@@ -572,6 +649,7 @@ static struct attribute *hwmon_attributes[] = {
 //hwmon attributes with second fan
 static struct attribute *hwmon_gfx_attributes[] = {
   	&dev_attr_pwm1.attr,
+	&dev_attr_pwm1_enable.attr,
 	&dev_attr_fan1_min.attr,
 	&dev_attr_fan1_input.attr,
 	&dev_attr_fan1_label.attr,
@@ -579,6 +657,7 @@ static struct attribute *hwmon_gfx_attributes[] = {
 	&dev_attr_fan1_speed_max.attr,	
 	
 	&dev_attr_pwm2.attr,
+	&dev_attr_pwm2_enable.attr,
 	&dev_attr_fan2_min.attr,
 	&dev_attr_fan2_input.attr,
 	&dev_attr_fan2_label.attr,
