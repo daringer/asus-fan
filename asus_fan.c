@@ -42,12 +42,6 @@ struct asus_fan_driver {
 	const char		*name;
 	struct module		*owner;
 
-	// 'fan_states' save last (manually) set fan state/speed
-	int fan_state;
-	// 'fan_manual_mode' keeps whether this fan is manually controlled
-	bool fan_manual_mode;
-
-
 	int (*probe) (struct platform_device *device);
 
 	struct platform_driver	platform_driver;
@@ -81,13 +75,15 @@ static struct acpi_object_list params;
 static int max_fan_speed_default = 255;
 // ... user-defined max value
 static int max_fan_speed_setting = 255;
+
+
 //// fan "name" 
 // regular fan name
 static char *fan_desc = "CPU Fan";
 // gfx-card fan name
 static char *gfx_fan_desc = "GFX Fan";
 
-//this speed will be reported as the minimal for the fans
+//this speed will be reported as the minimal speed for the fans
 static int fan_minimum = 10;
 static int fan_minimum_gfx = 10;
 
@@ -144,11 +140,74 @@ static int fan_set_auto(void);
 // - includes manual mode activation
 static int fan_set_speed(int fan, int speed);
 
+//reports current speed of the fan (unit:RPM)
+static unsigned long long __fan_rpm(int fan);
+
+//Writes RPMs of fan0 (CPU fan) to buf => needed for hwmon device
+static ssize_t fan_rpm(struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+
+//Writes RPMs of fan1 (GPU fan) to buf => needed for hwmon device
+static ssize_t fan_rpm_gfx(struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+//Writes Label of fan0 (CPU fan) to buf => needed for hwmon device
+static ssize_t fan_label(struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+
+//Writes Label of fan1 (GPU fan) to buf => needed for hwmon device
+static ssize_t fan_label_gfx(struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+//Writes Minimal speed of fan0 (CPU fan) to buf => needed for hwmon device
+static ssize_t fan_min(struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+
+//Writes Minimal speed of fan1 (GPU fan) to buf => needed for hwmon device
+static ssize_t fan_min_gfx(struct device *dev,
+				struct device_attribute *attr,
+				char *buf);
+
+//sets maximal speed for auto and manual mode => needed for hwmon device
+static ssize_t set_max_speed(	struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count);
+
+//writes maximal speed for auto and manual mode to buf => needed for hwmon device
+static ssize_t get_max_speed(	struct device *dev,
+					struct device_attribute *attr,
+					char *buf);
+
+//is the hwmon interface visible?
+static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
+					  struct attribute *attr, int idx);
+
+//initialization of hwmon interface
+static int asus_fan_hwmon_init(struct asus_fan *asus);
+
+
+//remove "asus_fan" subfolder from /sys/devices/platform
+static void asus_fan_sysfs_exit(struct platform_device *device);
+
+//set up platform device and call hwmon init
+static int asus_fan_probe(struct platform_device *pdev);
+
+//do anything needed to remove platform device
+static int asus_fan_remove(struct platform_device *device);
+
+//prepare platform device and let it create
+int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver);
+
+//remove the driver
+void asus_fan_unregister_driver(struct asus_fan_driver *driver);
+
 // housekeeping (module) stuff...
 static void __exit fan_exit(void);
 static int __init fan_init(void);
 
-//TODO: some functions don't have PROTOTYPES by now
 
 //////
 ////// IMPLEMENTATIONS
@@ -156,36 +215,33 @@ static int __init fan_init(void);
 static int __fan_get_cur_state(int fan,
                                unsigned long *state) {
 
-  // struct acpi_object_list params;
-  union acpi_object args[1];
-  unsigned long long value;
-  acpi_status ret;
-
-  // getting current fan 'speed' as 'state',
-  params.count = ARRAY_SIZE(args);
-  params.pointer = args;
-  // Args:
-  // - get speed from the fan with index 'fan'
-  args[0].type = ACPI_TYPE_INTEGER;
-  args[0].integer.value = fan;
-
-  // fan does not report during manual speed setting - so fake it!
-  if (fan_manual_mode[fan]) {
-    *state = fan_states[fan];
-    return 0;
-  }
-
-  // acpi call
-  ret = acpi_evaluate_integer(NULL, "\\_TZ.RFAN", &params, &value);
-  if(ret != AE_OK)
-    return ret;
-//TODO: do that nicer
-  if(true) //on N551JK: multiply with 4 thus read out and commanded speeds equal
-  {
-      value++;
-      value *= 4;
-  }
-  *state = value;
+  /* very nasty, but (by now) the only idea I had to calculate the pwm value from the measured pwms
+   * => heat up the notebook
+   * => reduce maxumum fan speed
+   * => rpms are still updated and you know the pwm value => Mapping Table
+   * => do a regression
+   * => =RPM*RPM*0,0000095+0,01028*RPM+26,5
+RPMs	PWM
+3640	190
+3500	180
+3370	170
+3240	160
+3110	150
+2960	140
+2800	130
+2640	120
+2470	110
+2290	100
+2090	90
+1890	80
+1660	70
+1410	60
+1110	50
+950	45
+790	40
+*/
+  unsigned long long rpm = __fan_rpm(fan);
+  *state = rpm*rpm*100/10526316+rpm*1000/97276+26;
   return 0;
 }
 
@@ -238,6 +294,12 @@ static unsigned long long __fan_rpm(int fan)
   union acpi_object args[1];
   unsigned long long value;
   acpi_status ret;
+  
+  
+  // fan does not report during manual speed setting - so fake it!
+  if (fan_manual_mode[fan]) {
+    return fan_states[fan]*fan_states[fan]*1000/-16054 + fan_states[fan]*32648/1000 - 365;
+  }
 
   // getting current fan 'speed' as 'state',
   params.count = ARRAY_SIZE(args);
@@ -249,7 +311,7 @@ static unsigned long long __fan_rpm(int fan)
 
     // acpi call
   ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params, &value);
-  if(ret != AE_OK)
+  if(ret != AE_OK || value > 10000)
     return 0; 
   return value;
 }
@@ -467,7 +529,7 @@ static ssize_t get_max_speed(	struct device *dev,
 }
 
 
-
+//Makros defining all possible hwmon attributes
 static DEVICE_ATTR(pwm1, S_IWUSR | S_IRUGO, fan_get_cur_state, fan_set_cur_state);
 static DEVICE_ATTR(fan1_min, S_IRUGO, fan_min, NULL);
 static DEVICE_ATTR(fan1_input, S_IRUGO, fan_rpm, NULL);
@@ -480,6 +542,7 @@ static DEVICE_ATTR(fan2_min, S_IRUGO, fan_min_gfx, NULL);
 static DEVICE_ATTR(fan2_input, S_IRUGO, fan_rpm_gfx, NULL);
 static DEVICE_ATTR(fan2_label, S_IRUGO, fan_label_gfx, NULL);
 
+//hwmon attributes without second fan
 static struct attribute *hwmon_attributes[] = {
 	&dev_attr_pwm1.attr,
 	&dev_attr_fan1_min.attr,
@@ -490,6 +553,7 @@ static struct attribute *hwmon_attributes[] = {
 	NULL
 };
 
+//hwmon attributes with second fan
 static struct attribute *hwmon_gfx_attributes[] = {
   	&dev_attr_pwm1.attr,
 	&dev_attr_fan1_min.attr,
@@ -505,6 +569,7 @@ static struct attribute *hwmon_gfx_attributes[] = {
 	NULL
 };
 
+//by now sysfs is always visible 
 static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
 					  struct attribute *attr, int idx)
 {
@@ -654,7 +719,26 @@ static int __init fan_init(void) {
     // not an ASUSTeK system ...
   } else
     return -ENODEV;
+  
+    // check if reseting fan speeds works
+  ret = fan_set_max_speed(max_fan_speed_default, false);
+  if (ret != AE_OK) {
+    printk(KERN_INFO
+           "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
+           max_fan_speed_default, ret);
+    return -ENODEV;
+  }
 
+    // force sane enviroment / init with automatic fan controlling
+  if ((ret = fan_set_auto()) != AE_OK) {
+    printk(
+        KERN_INFO
+        "asus-fan (init) - set auto-mode speed to active, failed! errcode: %d",
+        ret);
+    return -ENODEV;
+  }
+  
+  
   ret = asus_fan_register_driver(&asus_fan_driver);
   if (ret != AE_OK) {
     printk(KERN_INFO
@@ -663,23 +747,9 @@ static int __init fan_init(void) {
     return ret;
   }
   
-  // set max-speed back to 'default'
-  ret = fan_set_max_speed(max_fan_speed_default, false);
-  if (ret != AE_OK) {
-    printk(KERN_INFO
-           "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
-           max_fan_speed_default, ret);
-    return ret;
-  }
 
-  // force sane enviroment / init with automatic fan controlling
-  if ((ret = fan_set_auto()) != AE_OK) {
-    printk(
-        KERN_INFO
-        "asus-fan (init) - set auto-mode speed to active, failed! errcode: %d",
-        ret);
-    return ret;
-  }
+
+
 
   printk(KERN_INFO "asus-fan (init) - finished init\n");
   return 0;
