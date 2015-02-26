@@ -241,7 +241,17 @@ RPMs	PWM
 790	40
 */
   unsigned long long rpm = __fan_rpm(fan);
+  if(rpm == 0)
+  {
+      *state = 0;
+      return 0;
+  }
   *state = rpm*rpm*100/10526316+rpm*1000/97276+26;
+  //ensure state is within a valid range
+  if(*state > 255)
+  {
+      *state = 0;
+  }
   return 0;
 }
 
@@ -298,21 +308,27 @@ static unsigned long long __fan_rpm(int fan)
   
   // fan does not report during manual speed setting - so fake it!
   if (fan_manual_mode[fan]) {
-    return fan_states[fan]*fan_states[fan]*1000/-16054 + fan_states[fan]*32648/1000 - 365;
+    value = fan_states[fan]*fan_states[fan]*1000/-16054 + fan_states[fan]*32648/1000 - 365;
+    ret = AE_OK;
   }
+  else
+  {
 
-  // getting current fan 'speed' as 'state',
-  params.count = ARRAY_SIZE(args);
-  params.pointer = args;
-  // Args:
-  // - get speed from the fan with index 'fan'
-  args[0].type = ACPI_TYPE_INTEGER;
-  args[0].integer.value = fan;
+      // getting current fan 'speed' as 'state',
+      params.count = ARRAY_SIZE(args);
+      params.pointer = args;
+      // Args:
+      // - get speed from the fan with index 'fan'
+      args[0].type = ACPI_TYPE_INTEGER;
+      args[0].integer.value = fan;
 
-    // acpi call
-  ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params, &value);
+	// acpi call
+      ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params, &value);
+  }
   if(ret != AE_OK || value > 10000)
-    return 0; 
+  {
+    value = 0;
+  }
   return value;
 }
 static ssize_t fan_rpm(struct device *dev,
