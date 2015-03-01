@@ -1,8 +1,8 @@
 asus-fan
 ========
 
-ASUS (Zenbook) fan(s) control kernel module.
-The following Zenbooks are supported:
+ASUS  fan(s) control kernel module.
+The following Notebooks should be supported - be aware that it's pre alpha
 
 Single Fan | Two Fans (NVIDIA)
 -----------|-------------------
@@ -20,53 +20,46 @@ Quickstart
 ----------
 
 - **Build** - just run ```make``` inside the directory
-- **Install** - copy the resulting ```asus_fan.ko``` file somewhere below
-  ```/lib/modules/$(uname -r)/``` and rebuild module dependencies:
-```bash
-cp asus_fan.ko /lib/modules/$(uname -r)/
-depmod -a
-```
+- **Install** - run ```sudo make install``` inside the directory
 - **Load** - simply as usual:
 ```bash
 modprobe asus_fan
 ```
-- **Interface** - the fan(s) is/are exposed as ```cooling_device```, thus available in:
+- **Interface** - the fan(s) is/are exposed as ```hwmon```, thus available in:
 ```bash
-/sys/devices/virtual/thermal/cooling_deviceX/
+/sys/class/hwmon/hwmonX
 ```
-- **Find X** - the ```X``` changes from boot to boot, a small bash script is found inside
-  the repository as a simpler interface:
-```bash
-basepath=/sys/devices/virtual/thermal/
-fpath=$(grep -r '^Fan$' ${basepath}/cooling_device*/type 2> /dev/null | \
-        cut -d ":" -f 1 | xargs  --no-run-if-empty dirname)
-gfxfanpath=$(grep -r '^GFX Fan$' ${basepath}/cooling_device*/type 2> /dev/null | \
-        cut -d ":" -f 1 | xargs  --no-run-if-empty dirname)
+- **Monitor Fan speed** -simply use xsensors for graphical, or sensors for console monitoring
 ```
-- **Read Fan** - the files ```cur_state```, ```max_state``` provide the obvious, ranging from 0 - 255:
+
+- **Set Fan Speed** - write anything from 0 to 255 to ```pwmX```, like:
 ```bash
-cat ${fpath}/cur_state          # get current fan speed
-cat ${fpath}/max_state          # get max fan speed
-```
-- **Set Fan Speed** - write anything from 0 to 255 to ```cur_state```, like:
-```bash
-echo 123 > ${fpath}/cur_state   # set to 123
-echo 0 > ${fpath}/cur_state     # switch fan off (DANGEROUS!)
-echo 255 > ${fpath}/cur_state   # set to max speed
+echo 123 > ${fpath}/pwmX   # set to 123
+echo 0 > ${fpath}/pwmX     # switch fan off (DANGEROUS!)
+echo 255 > ${fpath}/pwmX   # set to max speed
 ```
 - **ATTENTION** - the fan is now in manual mode - do not burn your machine!
 - **Set Auto-Fan(s)**: to reactivate the automatic fan control write "256" to ```cur_state```:
 ```bash
-echo 256 > ${fpath}/cur_state   # reset to auto-mode (always for all fans)
+echo 256 > ${fpath}/pwmX   # reset to auto-mode (always for all fans)
 ```
+
+- **fancontrol** - There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature...
+thats done by "pwmconfig"
+Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
+
+-**Max fan speed**- There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
 
 **TODOs**:
 ----------
-- expose fan RPMs (once I get to know where, cooling_device api allows only cur/max_state)
-- read and set threshold for maximum speed while automatically controlled (actually works, but have no idea how to interface with the userland, thermal_cooling_device_* function family seems to not provide anything beside cur-/max_state files inside /sys/...
+- as a more general aproach: remove check for model name but only verfy existance of acpi functions
+- do a code review and clean it up
+- check with more models and the dual fan models
+- add an included fan controller
 - submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??
 
 
 **THANKS TO**:
 --------------
 - To Felipe Contreras (felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
+- To Markus Meissner (daringer) for the asus_fan version with "thermal" interface - the hwmon version is a port of that one

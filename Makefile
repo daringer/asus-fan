@@ -12,3 +12,5 @@ install:
 	#
 	# finally add it to some on-boot-load-mechanism
 	# the module will _not_ automatically load.
+	cp asus_fan.ko "/usr/lib/modules/$(shell uname -r)/"
+	depmod -a
