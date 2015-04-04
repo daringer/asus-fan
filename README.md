@@ -48,7 +48,7 @@ echo 256 > ${fpath}/pwmX   # reset to auto-mode (always for all fans)
 thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
 
-- **thermald** - Is a thermal daemon, which proactively controls thermal, using P-states, T-states, and the Intel power clamp driver. It works well with asus-fan. On an Asus UX31A no configuration was needed. asus-fan was installed and then thermald. Control of temperature works very well with the default configuration.
+- **thermald** - Is a thermal daemon, which proactively controls thermal, using P-states, T-states, and the Intel power clamp driver. It works well with asus-fan. On an Asus UX31A no configuration was needed. asus-fan was installed and then thermald. Control of temperature works very well with the default configuration. More information about thermald <a href="https://01.org/linux-thermal-daemon/documentation/introduction-thermal-daemon">here</a>.
 
 - **Max fan speed**- There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
 
