@@ -1,16 +1,12 @@
-obj-m := asus_fan.o
-KDIR := /lib/modules/$(shell  uname -r)/build
+KDIR ?= /lib/modules/$(shell uname -r)/build
 
-PWD := $(shell pwd)
+obj-m := asus_fan.o
 
 all:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	make -C $(KDIR) M=$$PWD modules
 
 install:
-	# just copy the .ko file anywhere below:
-	# /lib/modules/$(uname -r)/
-	#
-	# finally add it to some on-boot-load-mechanism
-	# the module will _not_ automatically load.
-	cp asus_fan.ko "/usr/lib/modules/$(shell uname -r)/"
-	depmod -a
+	make -C $(KDIR) M=$$PWD modules_install
+
+clean:
+	make -C $(KDIR) M=$$PWD clean
