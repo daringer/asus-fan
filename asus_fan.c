@@ -264,16 +264,24 @@ RPMs	PWM
 790	40
 */
   int rpm = __fan_rpm(fan);
-  if(rpm == 0)
+  
+  if(fan_manual_mode[fan])
   {
-      *state = 0;
-      return 0;
+	  *state = fan_states[fan];
   }
-  *state = rpm*rpm*100/10526316+rpm*1000/97276+26;
-  //ensure state is within a valid range
-  if(*state > 255)
+  else
   {
-      *state = 0;
+	if(rpm == 0)
+	{
+	*state = 0;
+	return 0;
+	}
+	*state = rpm*rpm*100/10526316+rpm*1000/97276+26;
+	//ensure state is within a valid range
+	if(*state > 255)
+	{
+	*state = 0;
+	}
   }
   return 0;
 }
@@ -346,7 +354,8 @@ static int __fan_rpm(int fan)
   // fan does not report during manual speed setting - so fake it!
   if (fan_manual_mode[fan]) {
     value = fan_states[fan]*fan_states[fan]*1000/-16054 + fan_states[fan]*32648/1000 - 365;
-    ret = AE_OK;
+     if(value > 10000)
+	     return 0;
   }
   else
   {
@@ -361,16 +370,11 @@ static int __fan_rpm(int fan)
 
 	// acpi call
       ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params, &value);
+       if(ret != AE_OK)
+		return -1;
   }
-  if(ret != AE_OK || value > 10000)
-  {
-    return -1;
-  }
-  else
-  {
-	return (int) value;
-  }
-}
+  return (int) value;
+ }
 static ssize_t fan_rpm(struct device *dev,
 				struct device_attribute *attr,
 				char *buf)
