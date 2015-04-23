@@ -1,6 +1,6 @@
 /**
  *  ASUS Fan control module, verified for following models:
- *  - N551JK 
+ *  - N551JK
  *  - ....
  *
  *  Just 'make' and copy the fan.ko file to /lib/modules/`uname -r`/...
@@ -107,7 +107,7 @@ static struct attribute *platform_attributes[] = {
 // hidden fan api funcs used for both (wrap into them)
 static int __fan_get_cur_state( int fan,
                                unsigned long *state);
-static int __fan_set_cur_state(int fan,
+static int __fan_set_cur_state( int fan,
                                unsigned long state);
 
 //get current mode (auto, manual, perhaps auto mode of module in future)
@@ -164,7 +164,7 @@ static int fan_set_auto(void);
 static int fan_set_speed(int fan, int speed);
 
 //reports current speed of the fan (unit:RPM)
-static unsigned long long __fan_rpm(int fan);
+static int __fan_rpm(int fan);
 
 //Writes RPMs of fan0 (CPU fan) to buf => needed for hwmon device
 static ssize_t fan_rpm(struct device *dev,
@@ -263,7 +263,7 @@ RPMs	PWM
 950	45
 790	40
 */
-  unsigned long long rpm = __fan_rpm(fan);
+  int rpm = __fan_rpm(fan);
   if(rpm == 0)
   {
       *state = 0;
@@ -335,14 +335,14 @@ static int fan_set_speed(int fan, int speed) {
                                &value);
 }
 
-static unsigned long long __fan_rpm(int fan)
+static int __fan_rpm(int fan)
 {
   struct acpi_object_list params;
   union acpi_object args[1];
   unsigned long long value;
   acpi_status ret;
-  
-  
+
+
   // fan does not report during manual speed setting - so fake it!
   if (fan_manual_mode[fan]) {
     value = fan_states[fan]*fan_states[fan]*1000/-16054 + fan_states[fan]*32648/1000 - 365;
@@ -364,23 +364,26 @@ static unsigned long long __fan_rpm(int fan)
   }
   if(ret != AE_OK || value > 10000)
   {
-    value = 0;
+    return -1;
   }
-  return value;
+  else
+  {
+	return (int) value;
+  }
 }
 static ssize_t fan_rpm(struct device *dev,
 				struct device_attribute *attr,
 				char *buf)
 {
-  return sprintf(buf, "%llu\n", __fan_rpm(0));
- 
+  return sprintf(buf, "%d\n", __fan_rpm(0));
+
 }
 static ssize_t fan_rpm_gfx(struct device *dev,
 				struct device_attribute *attr,
 				char *buf)
 {
-  return sprintf(buf, "%llu\n", __fan_rpm(1));
- 
+  return sprintf(buf, "%d\n", __fan_rpm(1));
+
 }
 
 
@@ -641,21 +644,21 @@ static struct attribute *hwmon_attributes[] = {
 	&dev_attr_fan1_min.attr,
 	&dev_attr_fan1_input.attr,
 	&dev_attr_fan1_label.attr,
-	
-	&dev_attr_fan1_speed_max.attr,	
+
+	&dev_attr_fan1_speed_max.attr,
 	NULL
 };
 
 //hwmon attributes with second fan
 static struct attribute *hwmon_gfx_attributes[] = {
-  	&dev_attr_pwm1.attr,
+	&dev_attr_pwm1.attr,
 	&dev_attr_pwm1_enable.attr,
 	&dev_attr_fan1_min.attr,
 	&dev_attr_fan1_input.attr,
 	&dev_attr_fan1_label.attr,
-	
-	&dev_attr_fan1_speed_max.attr,	
-	
+
+	&dev_attr_fan1_speed_max.attr,
+
 	&dev_attr_pwm2.attr,
 	&dev_attr_pwm2_enable.attr,
 	&dev_attr_fan2_min.attr,
@@ -664,7 +667,7 @@ static struct attribute *hwmon_gfx_attributes[] = {
 	NULL
 };
 
-//by now sysfs is always visible 
+//by now sysfs is always visible
 static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
 					  struct attribute *attr, int idx)
 {
@@ -718,7 +721,7 @@ static int asus_fan_probe(struct platform_device *pdev)
 {
 	struct platform_driver *pdrv = to_platform_driver(pdev->dev.driver);
 	struct asus_fan_driver *wdrv = to_asus_fan_driver(pdrv);
-	
+
         struct asus_fan *asus;
 	int err = 0;
 
@@ -783,38 +786,19 @@ int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver)
 
 static int __init fan_init(void) {
   acpi_status ret;
-
+  int rpm;
   // identify system/model/platform
   if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
-    const char *name = dmi_get_system_info(DMI_PRODUCT_NAME);
 
-    // catching all (supported) Zenbooks _without_ a dedicated gfx-card
-    if (!strcmp(name, "UX31E") || !strcmp(name, "UX21") ||
-        !strcmp(name, "UX301LA") || !strcmp(name, "UX21A") ||
-        !strcmp(name, "UX31A") || !strcmp(name, "UX32A") ||
-        !strcmp(name, "UX42VS") || !strcmp(name, "UX302LA") ||
-        !strcmp(name, "N551JK") || !strcmp(name, "N56JN")) {
-      has_gfx_fan = false;
-
-      // this branch represents the (supported) Zenbooks with a dedicated
-      // gfx-card
-    } else if (!strcmp(name, "UX32VD") || !strcmp(name, "UX52VS") ||
-               !strcmp(name, "UX500VZ") || !strcmp(name, "NX500")) {
-      printk(
-          KERN_INFO
-          "asus-fan (init) - found dedicated gfx-card - second fan usable!\n");
-      has_gfx_fan = true;
-
-      // product not supported by this driver...
-    } else {
-      printk(KERN_INFO "asus-fan (init) - product name: '%s' unknown!\n", name);
-      printk(KERN_INFO "asus-fan (init) - aborting!\n");
-      return -ENODEV;
-    }
-    // not an ASUSTeK system ...
-  } else
-    return -ENODEV;
-  
+	
+	rpm = __fan_rpm(0);
+	if(rpm == -1)
+		return -ENODEV;
+	rpm = __fan_rpm(1);
+	if(rpm == -1)
+		has_gfx_fan = false;
+	else
+		has_gfx_fan = true;
     // check if reseting fan speeds works
   ret = fan_set_max_speed(max_fan_speed_default, false);
   if (ret != AE_OK) {
@@ -832,8 +816,8 @@ static int __init fan_init(void) {
         ret);
     return -ENODEV;
   }
-  
-  
+
+
   ret = asus_fan_register_driver(&asus_fan_driver);
   if (ret != AE_OK) {
     printk(KERN_INFO
@@ -841,11 +825,8 @@ static int __init fan_init(void) {
            max_fan_speed_default, ret);
     return ret;
   }
-  
 
-
-
-
+  }
   printk(KERN_INFO "asus-fan (init) - finished init\n");
   return 0;
 }
