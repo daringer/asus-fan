@@ -1,12 +1,5 @@
 /**
- *  ASUS Fan control module, verified for following models:
- *  - N551JK
- *  - ....
- *
- *  Just 'make' and copy the fan.ko file to /lib/modules/`uname -r`/...
- *  If the modules loads succesfully it will bring up a "thermal_cooling_device"
- *  like /sys/devices/virtual/thermal/cooling_deviceX/ mostly providing
- *  cur_state / max_state
+ *  ASUS Fan control module
  *
  *  PLEASE USE WITH CAUTION, you can easily overheat your machine with a wrong
  *  manually set fan speed...
