@@ -2,7 +2,7 @@ asus-fan
 ========
 
 ASUS  fan(s) control kernel module.
-The following Notebooks should be supported - be aware that it's pre alpha
+The following Notebooks should be supported - be aware that it's alpha
 
 Single Fan | Two Fans (NVIDIA)
 -----------|-------------------
@@ -11,7 +11,7 @@ UX31E      | UX42VS
 UX21A      | UX52VS
 UX31A      | U500VZ
 UX32A      | NX500
-UX301LA    |
+UX301LA    | UX32LN
 UX302LA    |
 N551JK     |
 N56JN      |
@@ -52,7 +52,6 @@ Nevertheless that script did it worse for me than the original controller - thus
 
 **TODOs**:
 ----------
-- as a more general aproach: remove check for model name but only verfy existance of acpi functions
 - do a code review and clean it up
 - check with more models and the dual fan models
 - add an included fan controller
