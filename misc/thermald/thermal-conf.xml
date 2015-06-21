@@ -37,7 +37,7 @@ use "man thermal-conf.xml" for details
         <TripPoints>
           <TripPoint>
             <SensorType>die_sens</SensorType>
-            <Temperature>91000</Temperature>
+            <Temperature>87000</Temperature>
             <type>passive</type>
             <ControlType>PARALLEL</ControlType>
             <CoolingDevice>
@@ -142,7 +142,12 @@ use "man thermal-conf.xml" for details
         <ReadBack>1</ReadBack>
         <MaxState>255</MaxState>
         <DebouncePeriod>1</DebouncePeriod>
-      </CoolingDevice>
+	<PidControl>
+	  <kp>0.01</kp>
+	  <kd>0.001</kd>
+	  <ki>0.0000</ki>
+	</PidControl>
+	</CoolingDevice>
       <CoolingDevice>
         <Type>GFXFan</Type>
         <Path>/tmp/asus-fan-shm/fan_gfx_speed</Path>
@@ -151,6 +156,11 @@ use "man thermal-conf.xml" for details
         <ReadBack>1</ReadBack>
         <MaxState>255</MaxState>
         <DebouncePeriod>1</DebouncePeriod>
+	<PidControl>
+	  <kp>0.01</kp>
+	  <kd>0.001</kd>
+	  <ki>0.0000</ki>
+	</PidControl>
       </CoolingDevice>
     </CoolingDevices>
   </Platform>

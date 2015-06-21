@@ -258,7 +258,7 @@ static int __fan_set_cur_state(int fan, unsigned long state) {
   // catch illegal state set
   if (state > 255) {
     printk(KERN_INFO "asus-fan (set pwm%d) - illegal value provided: %d \n",
-           fan, state);
+           fan, (unsigned int) state);
     return 1;
   }
 
