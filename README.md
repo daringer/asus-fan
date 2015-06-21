@@ -1,8 +1,18 @@
 asus-fan
 ========
 
-ASUS  fan(s) control kernel module.
-The following Notebooks should be supported - be aware that it's alpha
+ASUS (Zenbook) fan(s) control and monitor kernel module.
+
+- [Compatibilty](#compatibilty)
+- [Quickstart](#quickstart)
+- [Short Comparison To Other Similar Projects](#short-comparison-to-other-similar-projects)
+- [Tools/Configs/Misc](#tools--configs--simple-fancontrol-script)
+- [ToDos](#todos)
+- [ThanksTo](#thanks-to)
+
+Compatibilty
+------------
+The following Notebooks should be supported - be aware that it's still not in production state
 
 Single Fan | Two Fans (NVIDIA)
 -----------|-------------------
@@ -15,19 +25,6 @@ UX301LA    | UX32LN
 UX302LA    |
 N551JK     |
 N56JN      |
-
-Short Comparison To Other Similar Projects
-------------------------------------------
-- [asus-fancontrol](https://github.com/nicolai-rostov/asus-fancontrol) userland application, acpi_call based, limited number of (offical/tested) compatible zenbook models, no (standard) interface exposed, no support for second fan
-- [zenbook](https://github.com/juyrjola/zenbook) userland appliaction, acpi_call based, only UX32VD supported, no (standard) interface exposed, no support for second fan
-- [asusfan](https://github.com/gpiemont/asusfan) kernelspace driver, model support: A8J, A8JS, N50V[cn], no (standard) interface exposed, interface based on module parameters, replaces automatic control with own realization, no support for second fan
-- [asusfan (original)](https://code.google.com/p/asusfan/) kernelspace driver, Model support A8J and A8JS, no (standard) interface, automatic fan speed adjustment, no support for second fan
-- [asusfanctrld](https://github.com/nflx/asusfanctrld) userland (bash) application, acpi_call  based, only UX32VD, second fan support?, no (standard) interface exposed
-- [asus_ux32v_fan_control](https://github.com/chrischdi/asus_ux32v_fan_control) is actually a fork of this project undergone a renaming (hmm), very old state, no hwmon (interface) support, thermal_device interface, most likely as buggy as this project was one year ago
-- [asus_wmi](https://github.com/KastB/asus_wmi) realization as a part of the exisiting `asus_wmi` module, which is maybe (really? would a asus-fan module be instantly denied?) the only way to submit it for the upstream kernel. Sister project, closely related to the one shown here.
-
-So this [project](https://github.com/daringer/asus-fan) distinguishes itself from the others by providing a **hwmon standard state-of-art interface** with a wide variety of **supported zenbook models** realized as a **kernelspace driver**. Guess you found the *right* one ;)
-
 
 Quickstart
 ----------
@@ -59,6 +56,20 @@ echo 0 > ${fpath}/pwmX_enable   # reset to auto-mode (always for all fans)
 
 - **Max fan speed** There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
 
+
+Short Comparison To Other Similar Projects
+------------------------------------------
+- [asus-fancontrol](https://github.com/nicolai-rostov/asus-fancontrol) userland application, acpi_call based, limited number of (offical/tested) compatible zenbook models, no (standard) interface exposed, no support for second fan
+- [zenbook](https://github.com/juyrjola/zenbook) userland appliaction, acpi_call based, only UX32VD supported, no (standard) interface exposed, no support for second fan
+- [asusfan](https://github.com/gpiemont/asusfan) kernelspace driver, model support: A8J, A8JS, N50V[cn], no (standard) interface exposed, interface based on module parameters, replaces automatic control with own realization, no support for second fan
+- [asusfan (original)](https://code.google.com/p/asusfan/) kernelspace driver, Model support A8J and A8JS, no (standard) interface, automatic fan speed adjustment, no support for second fan
+- [asusfanctrld](https://github.com/nflx/asusfanctrld) userland (bash) application, acpi_call  based, only UX32VD, second fan support?, no (standard) interface exposed
+- [asus_ux32v_fan_control](https://github.com/chrischdi/asus_ux32v_fan_control) is actually a fork of this project undergone a renaming (hmm), very old state, no hwmon (interface) support, thermal_device interface, most likely as buggy as this project was one year ago
+- [asus_wmi](https://github.com/KastB/asus_wmi) realization as a part of the exisiting `asus_wmi` module, which is maybe (really? would a asus-fan module be instantly denied?) the only way to submit it for the upstream kernel. Sister project, closely related to the one shown here.
+
+So this [project](https://github.com/daringer/asus-fan) distinguishes itself from the others by providing a **hwmon standard state-of-art interface** with a wide variety of **supported zenbook models** realized as a **kernelspace driver**. Guess you found the *right* one ;)
+
+
 Tools / Configs / Simple Fancontrol Script
 ------------------------------------------
 
@@ -82,5 +93,6 @@ Nevertheless that script did it worse for me than the original controller - thus
 
 **THANKS TO**:
 --------------
-- To Felipe Contreras (felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
-- To Markus Meissner (daringer) for the asus_fan version with "thermal" interface - the hwmon version is a port of that one
+- To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
+- To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface 
+- To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
