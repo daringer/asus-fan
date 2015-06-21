@@ -56,6 +56,11 @@ echo 255 > ${fpath}/pwmX   # set to max speed
 echo 0 > ${fpath}/pwmX_enable   # reset to auto-mode (always for all fans)
 ```
 
+- **Max fan speed** There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
+
+Tools / Configs / Simple Fancontrol Script
+------------------------------------------
+
 - **fancontrol** - There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature...
 thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
@@ -64,7 +69,6 @@ Nevertheless that script did it worse for me than the original controller - thus
 
 - **Workaround (Fix?) for changing hwmon IDs after reboot** --- Create control and convenience symlinks using: [misc/create_symlinks.sh](https://github.com/daringer/asus-fan/blob/master/misc/create_symlinks.sh)
 
-- **Max fan speed** There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
 
 **TODOs**:
 ----------
