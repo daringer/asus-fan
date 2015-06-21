@@ -85,7 +85,7 @@ Nevertheless that script did it worse for me than the original controller - thus
 **TODOs**:
 ----------
 - do a code review and clean it up
-- check with more models and the dual fan models
+- check with more models
 - add an included fan controller
 - setting 'fanX_max' to 256 in order to reset all values to default, seems not a standard behavior --- where to put this functionality?
 - submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??
