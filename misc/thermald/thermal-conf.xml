@@ -4,9 +4,8 @@
   <Platform>
     <Name>ASUS UX32VD</Name>
     <ProductName>*</ProductName>
-    <!-- Preference>PERFORMANCE</Preference -->  <!-- ONLY USES the 'active' cooling devices -->
-    <Preference>QUIET</Preference>               <!-- ONLY USES the 'passive' ones! -->
-                                                 <!-- seems to be switched?! -->
+    <Preference>PERFORMANCE</Preference>  
+    <!-- Preference>QUIET</Preference --> 
 
     <ThermalSensors>
 
@@ -63,7 +62,7 @@
 
           <TripPoint> <!-- used by QUIET -->
             <SensorType>die_sens</SensorType>
-            <Temperature>75000</Temperature>
+            <Temperature>77500</Temperature>
             <type>active</type>
             <ControlType>PARALLEL</ControlType>
 
@@ -112,7 +111,7 @@
 
           <TripPoint>  <!-- QUIET -->
             <SensorType>die_sens</SensorType>
-            <Temperature>75000</Temperature>
+            <Temperature>77500</Temperature>
             <type>passive</type>
             <ControlType>SEQUENTIAL</ControlType>
 
