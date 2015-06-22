@@ -1,30 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-use "man thermal-conf.xml" for details
--->
 <!-- BEGIN -->
 <ThermalConfiguration>
   <Platform>
     <Name>ASUS UX32VD</Name>
     <ProductName>*</ProductName>
-    <!-- Preference>PERFORMANCE</Preference -->
-    <Preference>QUIET</Preference>
+    <!-- Preference>PERFORMANCE</Preference -->  <!-- ONLY USES the 'active' cooling devices -->
+    <Preference>QUIET</Preference>               <!-- ONLY USES the 'passive' ones! -->
+                                                 <!-- seems to be switched?! -->
+
     <ThermalSensors>
+
       <ThermalSensor>
         <Type>core1_sens</Type>
         <Path>/tmp/asus-fan-shm/core1_temp</Path>
         <AsyncCapable>0</AsyncCapable>
       </ThermalSensor>
+
       <ThermalSensor>
         <Type>core2_sens</Type>
         <Path>/tmp/asus-fan-shm/core2_temp</Path>
         <AsyncCapable>0</AsyncCapable>
       </ThermalSensor>
+
       <ThermalSensor>
         <Type>die_sens</Type>
         <Path>/tmp/asus-fan-shm/die_temp</Path>
         <AsyncCapable>0</AsyncCapable>
       </ThermalSensor>
+
       <ThermalSensor>
         <Type>tz_sens</Type>
         <Path>/tmp/asus-fan-shm/tz1_temp</Path>
@@ -32,136 +35,186 @@ use "man thermal-conf.xml" for details
       </ThermalSensor>
     </ThermalSensors>
     <ThermalZones>
+
       <ThermalZone>
-        <Type>fan_zone</Type>
+        <Type>cpu</Type>
         <TripPoints>
-          <TripPoint>
+
+          <TripPoint>  <!-- used by PERF (???) -->
             <SensorType>die_sens</SensorType>
-            <Temperature>87000</Temperature>
+            <Temperature>75000</Temperature>
             <type>passive</type>
             <ControlType>PARALLEL</ControlType>
+
             <CoolingDevice>
               <index>1</index>
               <type>CPUFan</type>
-              <influence>100</influence>
+              <influence>200</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
+
             <CoolingDevice>
               <index>2</index>
               <type>GFXFan</type>
-              <influence>100</influence>
+              <influence>200</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
           </TripPoint>
-          <TripPoint>
+
+          <TripPoint> <!-- used by QUIET -->
             <SensorType>die_sens</SensorType>
-            <Temperature>87000</Temperature>
+            <Temperature>75000</Temperature>
             <type>active</type>
             <ControlType>PARALLEL</ControlType>
+
             <CoolingDevice>
               <index>1</index>
               <type>CPUFan</type>
-              <influence>100</influence>
+              <influence>200</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
+
             <CoolingDevice>
               <index>2</index>
               <type>GFXFan</type>
-              <influence>100</influence>
+              <influence>200</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
           </TripPoint>
+
           <TripPoint>
             <SensorType>die_sens</SensorType>
-            <Temperature>105000</Temperature>
+            <Temperature>89000</Temperature>
             <type>max</type>
             <ControlType>PARALLEL</ControlType>
+
             <CoolingDevice>
               <index>1</index>
               <type>CPUFan</type>
-              <influence>100</influence>
+              <influence>200</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
+
             <CoolingDevice>
               <index>2</index>
               <type>GFXFan</type>
-              <influence>100</influence>
+              <influence>200</influence>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
           </TripPoint>
+
         </TripPoints>
       </ThermalZone>
+
       <ThermalZone>
         <Type>tdp_zone</Type>
         <TripPoints>
-          <TripPoint>
+
+          <TripPoint>  <!-- QUIET -->
             <SensorType>die_sens</SensorType>
-            <Temperature>87000</Temperature>
+            <Temperature>75000</Temperature>
             <type>passive</type>
             <ControlType>SEQUENTIAL</ControlType>
+
             <CoolingDevice>
               <index>1</index>
               <type>rapl_controller</type>
               <influence>100</influence>
-              <SamplingPeriod>12</SamplingPeriod>
+              <SamplingPeriod>5</SamplingPeriod>
             </CoolingDevice>
+
             <CoolingDevice>
               <index>2</index>
               <type>intel_pstate</type>
               <influence>100</influence>
-              <SamplingPeriod>12</SamplingPeriod>
+              <SamplingPeriod>5</SamplingPeriod>
             </CoolingDevice>
+
             <CoolingDevice>
               <index>3</index>
               <type>intel_powerclamp</type>
               <influence>100</influence>
-              <SamplingPeriod>12</SamplingPeriod>
+              <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
+
             <CoolingDevice>
               <index>4</index>
-              <type>cpufreq</type>
-              <influence>100</influence>
-              <SamplingPeriod>12</SamplingPeriod>
-            </CoolingDevice>
-            <CoolingDevice>
-              <index>5</index>
               <type>Processor</type>
               <influence>100</influence>
-              <SamplingPeriod>12</SamplingPeriod>
+              <SamplingPeriod>5</SamplingPeriod>
             </CoolingDevice>
           </TripPoint>
+          <TripPoint>  <!--- PERF -->
+            <SensorType>die_sens</SensorType>
+            <Temperature>870000</Temperature>
+            <type>active</type>
+            <ControlType>SEQUENTIAL</ControlType>
+
+            <CoolingDevice>
+              <index>1</index>
+              <type>rapl_controller</type>
+              <influence>150</influence>
+              <SamplingPeriod>5</SamplingPeriod>
+            </CoolingDevice>
+
+            <CoolingDevice>
+              <index>2</index>
+              <type>intel_pstate</type>
+              <influence>200</influence>
+              <SamplingPeriod>5</SamplingPeriod>
+            </CoolingDevice>
+
+            <CoolingDevice>
+              <index>3</index>
+              <type>intel_powerclamp</type>
+              <influence>125</influence>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+
+            <CoolingDevice>
+              <index>4</index>
+              <type>Processor</type>
+              <influence>150</influence>
+              <SamplingPeriod>5</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
+
         </TripPoints>
       </ThermalZone>
+
     </ThermalZones>
     <CoolingDevices>
+      
       <CoolingDevice>
         <Type>CPUFan</Type>
         <Path>/tmp/asus-fan-shm/fan_cpu_speed</Path>
-        <MinState>0</MinState>
+        <MinState>15</MinState>
         <IncDecStep>5</IncDecStep>
         <ReadBack>1</ReadBack>
         <MaxState>255</MaxState>
         <DebouncePeriod>1</DebouncePeriod>
 	<PidControl>
-	  <kp>0.01</kp>
-	  <kd>0.001</kd>
-	  <ki>0.0000</ki>
+	  <kp>0.0009</kp>
+	  <kd>-0.00014</kd>
+	  <ki>0.000</ki>
 	</PidControl>
-	</CoolingDevice>
+      </CoolingDevice>
+
       <CoolingDevice>
         <Type>GFXFan</Type>
         <Path>/tmp/asus-fan-shm/fan_gfx_speed</Path>
-        <MinState>0</MinState>
+        <MinState>15</MinState>
         <IncDecStep>5</IncDecStep>
         <ReadBack>1</ReadBack>
         <MaxState>255</MaxState>
         <DebouncePeriod>1</DebouncePeriod>
 	<PidControl>
-	  <kp>0.01</kp>
-	  <kd>0.001</kd>
-	  <ki>0.0000</ki>
+	  <kp>0.00095</kp>
+	  <kd>-0.00019</kd>
+	  <ki>0.000</ki>
 	</PidControl>
       </CoolingDevice>
+
     </CoolingDevices>
   </Platform>
 </ThermalConfiguration>
