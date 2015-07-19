@@ -58,6 +58,44 @@
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
           </TripPoint>
+	  
+          <TripPoint>
+            <SensorType>die_sens</SensorType>
+            <Temperature>105000</Temperature>
+            <type>critical</type>
+            <ControlType>PARALLEL</ControlType>
+
+            <CoolingDevice>
+              <index>1</index>
+              <type>CPUFan</type>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+
+            <CoolingDevice>
+              <index>2</index>
+              <type>GFXFan</type>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
+          
+	  <TripPoint>
+            <SensorType>die_sens</SensorType>
+            <Temperature>105000</Temperature>
+            <type>polling</type>
+            <ControlType>PARALLEL</ControlType>
+
+            <CoolingDevice>
+              <index>1</index>
+              <type>CPUFan</type>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+
+            <CoolingDevice>
+              <index>2</index>
+              <type>GFXFan</type>
+              <SamplingPeriod>1</SamplingPeriod>
+            </CoolingDevice>
+          </TripPoint>
 
           <TripPoint>
             <SensorType>die_sens</SensorType>
