@@ -71,7 +71,7 @@ realmod="asus_fan"
 hasfan2=0
 
 # set this to change stepping during manual speed set test
-USER_STEPPING=100
+USER_STEPPING=15
 
 r_housekeeping=0
 r_dmesginspection=0
