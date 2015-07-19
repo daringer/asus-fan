@@ -602,7 +602,7 @@ static struct attribute *hwmon_gfx_attributes[] = {
 // by now sysfs is always visible
 static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
                                            struct attribute *attr, int idx) {
-  return 1;
+	return attr->mode;
 }
 
 static struct attribute_group hwmon_attribute_group = {
