@@ -37,12 +37,12 @@
     <ThermalZones>
 
       <ThermalZone>
-        <Type>cpu</Type>
+        <Type>main</Type>
         <TripPoints>
 
           <TripPoint>
             <SensorType>die_sens</SensorType>
-            <Temperature>87000</Temperature>
+            <Temperature>80000</Temperature>
             <type>max</type>
             <ControlType>PARALLEL</ControlType>
 
@@ -59,7 +59,7 @@
             </CoolingDevice>
           </TripPoint>
 	  
-          <TripPoint>
+          <!-- TripPoint>
             <SensorType>die_sens</SensorType>
             <Temperature>105000</Temperature>
             <type>critical</type>
@@ -95,7 +95,7 @@
               <type>GFXFan</type>
               <SamplingPeriod>1</SamplingPeriod>
             </CoolingDevice>
-          </TripPoint>
+          </TripPoint -->
 
           <TripPoint>
             <SensorType>die_sens</SensorType>
@@ -219,7 +219,7 @@
         <MaxState>255</MaxState>
         <DebouncePeriod>1</DebouncePeriod>
 	<PidControl>
-	  <kp>0.0009</kp>
+	  <kp>0.009</kp>
 	  <kd>-0.00014</kd>
 	  <ki>0.000</ki>
 	</PidControl>
