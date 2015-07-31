@@ -30,6 +30,8 @@ MODULE_LICENSE("GPL");
   (container_of((pdrv), struct asus_fan_driver, platform_driver))
 
 #define DRIVER_NAME "asus_fan"
+#define TEMP1_CRIT 105
+#define TEMP1_LABEL "gfx_temp"
 
 struct asus_fan_driver {
   const char *name;
@@ -177,6 +179,16 @@ static ssize_t set_max_speed(struct device *dev, struct device_attribute *attr,
 // device
 static ssize_t get_max_speed(struct device *dev, struct device_attribute *attr,
                              char *buf);
+
+// GFX temperature
+static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
+                           char *buf);
+// GFX label
+static ssize_t temp1_crit(struct device *dev, struct device_attribute *attr,
+                           char *buf);
+// GFX crit
+static ssize_t temp1_label(struct device *dev, struct device_attribute *attr,
+                           char *buf);
 
 // is the hwmon interface visible?
 static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
@@ -558,6 +570,29 @@ static ssize_t get_max_speed(struct device *dev, struct device_attribute *attr,
   return sprintf(buf, "%lu\n", state);
 }
 
+static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
+                           char *buf) {
+    acpi_status ret;
+    unsigned long long int value;
+
+    // acpi call
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
+
+    return sprintf(buf, "%llud\n", value*1000);
+}
+
+static ssize_t temp1_label(struct device *dev, struct device_attribute *attr,
+                           char *buf) {
+  return sprintf(buf, "%s\n", TEMP1_LABEL);
+}
+
+static ssize_t temp1_crit(struct device *dev, struct device_attribute *attr,
+                           char *buf) {
+  return sprintf(buf, "%d\n", TEMP1_CRIT);
+}
+
+
+
 // Makros defining all possible hwmon attributes
 static DEVICE_ATTR(pwm1, S_IWUSR | S_IRUGO, fan_get_cur_state,
                    fan_set_cur_state);
@@ -579,13 +614,22 @@ static DEVICE_ATTR(fan2_min, S_IRUGO, fan_min_gfx, NULL);
 static DEVICE_ATTR(fan2_input, S_IRUGO, fan_rpm_gfx, NULL);
 static DEVICE_ATTR(fan2_label, S_IRUGO, fan_label_gfx, NULL);
 
+static DEVICE_ATTR(temp1_input, S_IRUGO, temp1_input, NULL);
+static DEVICE_ATTR(temp1_label, S_IRUGO, temp1_label, NULL);
+static DEVICE_ATTR(temp1_crit, S_IRUGO, temp1_crit, NULL);
+
 // hwmon attributes without second fan
 static struct attribute *hwmon_attributes[] = {
     &dev_attr_pwm1.attr,           &dev_attr_pwm1_enable.attr,
     &dev_attr_fan1_min.attr,       &dev_attr_fan1_input.attr,
     &dev_attr_fan1_label.attr,
 
-    &dev_attr_fan1_speed_max.attr, NULL};
+    &dev_attr_fan1_speed_max.attr,
+
+    &dev_attr_temp1_input.attr,
+    &dev_attr_temp1_label.attr,
+    &dev_attr_temp1_crit.attr,
+    NULL};
 
 // hwmon attributes with second fan
 static struct attribute *hwmon_gfx_attributes[] = {
@@ -597,7 +641,12 @@ static struct attribute *hwmon_gfx_attributes[] = {
 
     &dev_attr_pwm2.attr,           &dev_attr_pwm2_enable.attr,
     &dev_attr_fan2_min.attr,       &dev_attr_fan2_input.attr,
-    &dev_attr_fan2_label.attr,     NULL};
+    &dev_attr_fan2_label.attr,     
+
+    &dev_attr_temp1_input.attr,
+    &dev_attr_temp1_label.attr,
+    &dev_attr_temp1_crit.attr,
+    NULL};
 
 // by now sysfs is always visible
 static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
