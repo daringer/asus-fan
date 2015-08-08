@@ -43,13 +43,14 @@ ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp3_input ${d}/core2_temp
 [ -r /sys/devices/platform/asus_fan/hwmon/hwmon*/pwm2_enable ] && \
 	ln -s /sys/devices/platform/asus_fan/hwmon/hwmon*/pwm2_enable ${d}/fan_gfx_manual_mode
 
-#echo 1 > ${d}/fan_cpu_manual_mode
-#echo 1 > ${d}/fan_gfx_manual_mode
-
-
+# fan inputs ( -> pwn1 )
 [ -r /sys/devices/platform/asus_fan/hwmon/hwmon*/fan1_input ] && \
 	ln -s /sys/devices/platform/asus_fan/hwmon/hwmon*/fan1_input ${d}/fan_cpu_rpm
 [ -r /sys/devices/platform/asus_fan/hwmon/hwmon*/fan2_input ] && \
 	ln -s /sys/devices/platform/asus_fan/hwmon/hwmon*/fan2_input ${d}/fan_gfx_rpm
+
+# gfx temp ( temp1_input )
+[ -r /sys/devices/platform/asus_fan/hwmon/hwmon*/temp1_input ] && \
+	ln -s /sys/devices/platform/asus_fan/hwmon/hwmon*/temp1_input ${d}/gfx_temp
 
 echo "[+] finished...."
