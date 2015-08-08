@@ -53,7 +53,14 @@
 
 					<CoolingDevice>
 						<index>1</index>
+						<influence>100</influence>
 						<type>CPUFan</type>
+						<SamplingPeriod>1</SamplingPeriod>
+					</CoolingDevice>
+					<CoolingDevice>
+						<index>2</index>
+						<influence>90</influence>
+						<type>GFXFan</type>
 						<SamplingPeriod>1</SamplingPeriod>
 					</CoolingDevice>
 				</TripPoint>
@@ -63,12 +70,19 @@
 					<Temperature>77500</Temperature>
 					<type>active</type>
 					<ControlType>SEQUENTIAL</ControlType>
-
 					<CoolingDevice>
 						<index>1</index>
+						<influence>100</influence>
 						<type>CPUFan</type>
 						<SamplingPeriod>1</SamplingPeriod>
 					</CoolingDevice>
+					<CoolingDevice>
+						<index>2</index>
+						<influence>90</influence>
+						<type>GFXFan</type>
+						<SamplingPeriod>1</SamplingPeriod>
+					</CoolingDevice>
+
 				</TripPoint>
 			</TripPoints>
 		</ThermalZone>
