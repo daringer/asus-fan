@@ -1,0 +1,28 @@
+# Maintainer: Markus Meissner <coder@safemailbox.de>
+
+pkgname=asus-fan-dkms
+pkgver=0.9
+pkgrel=1
+_realname=asus-fan
+pkgdesc="Kernel module allowing to controll (both) fan inside various asus laptops"
+arch=('i686' 'x86_64')
+url=("http://github.com/daringer/asus-fan")
+license=('GPL')
+depends=('dkms')
+install=asus-fan-dkms.install
+source=("https://github.com/daringer/asus-fan/archive/v${pkgver}.tar.gz")
+
+build() {
+  cd ${srcdir}/${_realname}-${pkgver}
+
+  _kernver="$(uname -r)"
+
+  make KDIR=/lib/modules/${_kernver}/build
+}
+
+package() {
+  cd ${srcdir}/${_realname}-${pkgver}
+   
+  make install 
+  gzip "${pkgdir}/usr/lib/modules/${_extramodules}/bbswitch.ko"                      
+}
