@@ -1,0 +1,37 @@
+# Maintainer: Markus Meissner <coder@safemailbox.de>
+
+pkgname=asus-fan-dkms-git 
+pkgver=5136e69
+pkgrel=1
+_realname=asus-fan
+_modname=asus_fan
+pkgdesc="Kernel module allowing to control (both) fan inside various ASUS laptops"
+arch=('i686' 'x86_64')
+url=("http://github.com/daringer/asus-fan")
+md5sums=('SKIP')
+license=('GPL')
+depends=('dkms')
+install=asus-fan-dkms-git.install
+makedepends=('linux-headers' 'git')
+
+source=("${pkgname}::git+https://github.com/daringer/asus-fan.git")
+
+pkgver() {
+	  cd "${srcdir}/${pkgname}"
+	    git describe --always | sed 's|-|.|g'
+    }
+
+package() {
+  cd "${srcdir}/${pkgname}"
+
+  ksrcdir="/usr/src/${_modname}-git"
+
+  mkdir -p ${pkgdir}${ksrcdir}
+  
+  # insert version numbers
+  make -f Makefile.dkms DESTDIR=${pkgdir}${ksrcdir} src_install 
+
+
+
+}
+

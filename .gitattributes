@@ -1,0 +1,4 @@
+# exclude buildscripts from releases 
+# -> or generating a checksum (md5/sha) means solving a chicken-egg problem
+.gitattributes export-ignore
+buildscripts export-ignore

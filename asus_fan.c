@@ -30,6 +30,8 @@ MODULE_LICENSE("GPL");
   (container_of((pdrv), struct asus_fan_driver, platform_driver))
 
 #define DRIVER_NAME "asus_fan"
+#define ASUS_FAN_VERSION "#MODULE_VERSION#"
+
 #define TEMP1_CRIT 105
 #define TEMP1_LABEL "gfx_temp"
 
