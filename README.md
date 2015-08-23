@@ -22,7 +22,7 @@ UX21A      | UX52VS
 UX31A      | U500VZ
 UX32A      | NX500
 UX301LA    | UX32LN
-UX302LA    |
+UX302LA    | UX303LB
 N551JK     |
 N56JN      |
 
