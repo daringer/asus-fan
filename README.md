@@ -96,4 +96,5 @@ Nevertheless that script did it worse for me than the original controller - thus
 - To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
 - To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface 
 - To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
+- To [Tharre](https://github.com/Tharre) for the never ending stream of useful hints and information
 - Various testers and users providing valuable information and thus increasing the list of compatible devices
