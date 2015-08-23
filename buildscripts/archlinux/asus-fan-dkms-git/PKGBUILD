@@ -12,13 +12,13 @@ md5sums=('SKIP')
 license=('GPL')
 depends=('dkms')
 install=asus-fan-dkms-git.install
-makedepends=('linux-headers' 'git')
+makedepends=('git')
 
 source=("${pkgname}::git+https://github.com/daringer/asus-fan.git")
 
 pkgver() {
 	  cd "${srcdir}/${pkgname}"
-	    git describe --always | sed 's|-|.|g'
+	  echo `git describe --tags`.`git describe --always | sed 's|-|.|g'`
     }
 
 package() {
