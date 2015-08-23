@@ -25,13 +25,7 @@ package() {
   cd "${srcdir}/${pkgname}"
 
   ksrcdir="/usr/src/${_modname}-git"
-
   mkdir -p ${pkgdir}${ksrcdir}
-  
-  # insert version numbers
   make -f Makefile.dkms DESTDIR=${pkgdir}${ksrcdir} src_install 
-
-
-
 }
 
