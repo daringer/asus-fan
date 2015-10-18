@@ -1,0 +1,9 @@
+[Unit]                                                                                        
+Description=Create tmp-files to provide a consistent naming and location
+
+[Service]                                                                                     
+ExecStart=/usr/sbin/asus-fan-create-symlinks.sh                      
+
+[Install]                                                                                     
+WantedBy=multi-user.target
+Before=thermald.service

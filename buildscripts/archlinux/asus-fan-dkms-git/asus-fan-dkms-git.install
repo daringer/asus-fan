@@ -6,6 +6,9 @@ post_install() {
   ${_dkms} add -m "asus_fan/${PKGVER}"
   ${_dkms} build -m "asus_fan/${PKGVER}"
   ${_dkms} install -m "asus_fan/${PKGVER}"
+
+  echo "Enabling asus-fan as service in systemd"
+  systemctl enable asus-fan.service
 }
 
 post_upgrade() {
