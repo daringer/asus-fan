@@ -1,7 +1,7 @@
 # Maintainer: Markus Meissner <coder@safemailbox.de>
 
 pkgname=asus-fan-dkms-git 
-pkgver=v0.9.1.r4.ga71b1b4
+pkgver=v0.9.1.r6.g136b1e9
 pkgrel=1
 _realname=asus-fan
 _modname=asus_fan
@@ -25,8 +25,11 @@ pkgver() {
 package() {
   cd "${srcdir}/${pkgname}"
 
-  install misc/asus-fan-create-symlinks.sh ${pkgdir}/usr/sbin
-  install misc/systemd/asus-fan.service ${pkgdir}/usr/lib/systemd/system 
+  #mkdir -p ${pkgdir}/usr/sbin 
+  mkdir -p ${pkgdir}/usr/bin
+  mkdir -p ${pkgdir}/usr/lib/systemd/system
+  install misc/asus-fan-create-symlinks.sh ${pkgdir}/usr/bin/asus-fan-create-symlinks.sh
+  install misc/systemd/asus-fan.service ${pkgdir}/usr/lib/systemd/system/asus-fan.service
 
   echo "Installing asus-fan.service for systemd"
 
