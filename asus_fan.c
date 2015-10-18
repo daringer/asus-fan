@@ -580,7 +580,7 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
 
-    return sprintf(buf, "%llud\n", value*1000);
+    return sprintf(buf, "%llu\n", value*1000);
 }
 
 static ssize_t temp1_label(struct device *dev, struct device_attribute *attr,
