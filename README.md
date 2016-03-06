@@ -26,6 +26,30 @@ UX302LA    | UX303LB
 N551JK     |
 N56JN      |
 
+Installation with DKMS
+----------------------
+Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
+
+More information: [Ubuntu Help for DKMS](https://help.ubuntu.com/community/DKMS)
+
+As the superuser (root):
+
+    cd /usr/src && \
+      wget https://github.com/daringer/asus-fan/archive/master.tar.gz && \
+      tar xvf master.tar.gz
+    dkms add -m asus-fan -v master
+    dkms install -m asus-fan -v master
+    echo asus-fan >>/etc/modules
+
+Using sudo:
+
+    cd /usr/src
+    sudo wget https://github.com/daringer/asus-fan/archive/master.tar.gz && \
+      sudo tar xvf master.tar.gz
+    sudo dkms add -m asus-fan -v master
+    sudo dkms install -m asus-fan -v master
+    sudo echo asus-fan >>/etc/modules
+
 Quickstart
 ----------
 
@@ -89,7 +113,7 @@ Nevertheless that script did it worse for me than the original controller - thus
 **THANKS TO**:
 --------------
 - To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
-- To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface 
+- To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface
 - To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
 - To [Tharre](https://github.com/Tharre) for the never ending stream of useful hints and information
 - Various testers and users providing valuable information and thus increasing the list of compatible devices
