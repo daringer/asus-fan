@@ -30,7 +30,9 @@ Installation with DKMS
 ----------------------
 Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
 
-More information: [Ubuntu Help for DKMS](https://help.ubuntu.com/community/DKMS)
+Installing the asus-fan kernel module with DKMS means that when you upgrade to a new kernel you do not need to repeat the process outlined below in the Quickstart section each time. The asus-fan kernel module will automatically be rebuilt when a new kernel is installed.
+
+More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community/DKMS)
 
 As the superuser (root):
 
