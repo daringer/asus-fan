@@ -7,6 +7,7 @@ all:
 
 install:
 	make -C $(KDIR) M=$$PWD modules_install
+	depmod -a
 
 clean:
 	make -C $(KDIR) M=$$PWD clean

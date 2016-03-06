@@ -1,0 +1,29 @@
+modname := asus_fan
+DKMS := dkms
+modver := git
+
+KERNELRELEASE ?= $(shell uname -r)
+KVERSION = $(KERNELRELEASE)
+
+# directory in which generated files are stored
+DKMS_DEST := /usr/src/asus_fan-git 
+
+DESTDIR := $(DKMS_DEST)
+
+all: install
+
+src_install:
+	git clone https://github.com/daringer/asus-fan.git $(DESTDIR)
+	sed -i 's/#MODULE_VERSION#/git/g' $(DESTDIR)/dkms.conf
+	rm -rf $(DESTDIR)/{.git,.gitattributes,dkms,README.md,buildscripts,misc}
+
+build: src_install
+	$(DKMS) build -m asus_fan -v $(modver)
+
+install: build
+	$(DKMS) install -m asus_fan -v $(modver)
+
+uninstall:
+	$(DKMS) remove -m asus_fan -v $(modver) --all
+
+.PHONY: all src_install build install uninstall
