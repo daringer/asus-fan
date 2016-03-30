@@ -38,7 +38,7 @@ As the superuser (root):
 
     cd /usr/src && \
       wget https://github.com/daringer/asus-fan/archive/master.tar.gz && \
-      tar xvf master.tar.gz
+      tar xvf asus-fan-master.tar.gz
     dkms add -m asus_fan -v master
     dkms install -m asus_fan -v master
     echo asus_fan >>/etc/modules
@@ -47,7 +47,7 @@ Using sudo:
 
     cd /usr/src
     sudo wget https://github.com/daringer/asus-fan/archive/master.tar.gz && \
-      sudo tar xvf master.tar.gz
+      sudo tar xvf asus-fan-master.tar.gz
     sudo dkms add -m asus_fan -v master
     sudo dkms install -m asus_fan -v master
     sudo echo asus_fan >>/etc/modules
