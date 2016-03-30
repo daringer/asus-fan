@@ -37,7 +37,7 @@ More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community
 As the superuser (root):
 
     cd /usr/src && \
-      wget-o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz && \
+      wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz && \
       tar xvf asus-fan-master.tar.gz
     dkms add -m asus_fan -v master
     dkms install -m asus_fan -v master
