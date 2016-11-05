@@ -36,14 +36,15 @@ More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community
 
 **ArchLinux**
 
-Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the (install-script)[https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install] and run ``makepkg``:
+Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the [install script](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install) and run ``makepkg``:
+    
     cd /tmp
     mkdir asus-fan-build 
     cd asus-fan-build 
     wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
     wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install 
     makepkg
-    pacman -U asus-fan-dkms-git-*.pkg.tar.xz
+    sudo pacman -U asus-fan-dkms-git-*.pkg.tar.xz
 
 **Ubuntu**
 
