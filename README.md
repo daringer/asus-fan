@@ -86,7 +86,7 @@ modprobe asus_fan
 ```bash
 echo 123 > ${fpath}/pwmX   # set to 123
 echo 0 > ${fpath}/pwmX     # switch fan off (DANGEROUS!)
-echo 255 > ${fpath}/pwmX   # set to max speed
+echo 255 >= ${fpath}/pwmX   # set to max speed
 ```
 - **ATTENTION** - the fan is now in manual mode - do not burn your machine!
 - **Set Auto-Fan(s)**: to reactivate the automatic fan control write "0" to ```pwmX_enable```:
@@ -122,7 +122,6 @@ Nevertheless that script did it worse for me than the original controller - thus
 - do a code review and clean it up
 - check with more models
 - add an included fan controller
-- setting 'fanX_max' to 256 in order to reset all values to default, seems not a standard behavior --- where to put this functionality?
 - submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??
 
 
