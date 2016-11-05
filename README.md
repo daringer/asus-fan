@@ -26,6 +26,32 @@ UX302LA    | UX303LB
 N551JK     |
 N56JN      |
 
+Installation with DKMS
+----------------------
+Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
+
+Installing the asus-fan kernel module with DKMS means that when you upgrade to a new kernel you do not need to repeat the process outlined below in the Quickstart section each time. The asus-fan kernel module will automatically be rebuilt when a new kernel is installed.
+
+More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community/DKMS)
+
+As the superuser (root):
+
+    cd /usr/src && \
+      wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz && \
+      tar xvf asus-fan-master.tar.gz
+    dkms add -m asus_fan -v master
+    dkms install -m asus_fan -v master
+    echo asus_fan >>/etc/modules
+
+Using sudo:
+
+    cd /usr/src
+    sudo wget -o asus-fan-master.tar.gz https://github.com/daringer/asus-fan/archive/master.tar.gz && \
+      sudo tar xvf asus-fan-master.tar.gz
+    sudo dkms add -m asus_fan -v master
+    sudo dkms install -m asus_fan -v master
+    sudo echo asus_fan >>/etc/modules
+
 Quickstart
 ----------
 
@@ -39,7 +65,7 @@ modprobe asus_fan
 ```bash
 /sys/class/hwmon/hwmonX
 ```
-- **Monitor Fan speed** -simply use xsensors for graphical, or sensors for console monitoring
+- **Monitor Fan speed** -simply use xsensors or psensors for graphical, or sensors for console monitoring
 ```
 
 - **Set Fan Speed** - write anything from 0 to 255 to ```pwmX```, like:
@@ -77,11 +103,6 @@ Tools / Configs / Simple Fancontrol Script
 thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
 
-- [**thermal_daemon**](https://github.com/01org/thermal_daemon) [**config file(s)**](https://github.com/daringer/asus-fan/tree/master/misc/thermald) may be found in `misc/thermald/` (experimental, not fully finished). 
-
-- **Workaround (Fix?) for changing hwmon IDs after reboot** --- Create control and convenience symlinks using: [misc/create_symlinks.sh](https://github.com/daringer/asus-fan/blob/master/misc/create_symlinks.sh)
-
-
 **TODOs**:
 ----------
 - do a code review and clean it up
@@ -94,7 +115,7 @@ Nevertheless that script did it worse for me than the original controller - thus
 **THANKS TO**:
 --------------
 - To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
-- To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface 
+- To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface
 - To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
 - To [Tharre](https://github.com/Tharre) for the never ending stream of useful hints and information
 - Various testers and users providing valuable information and thus increasing the list of compatible devices
