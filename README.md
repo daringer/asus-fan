@@ -34,6 +34,19 @@ Installing the asus-fan kernel module with DKMS means that when you upgrade to a
 
 More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community/DKMS)
 
+**ArchLinux**
+
+Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the (install-script)[https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install] and run ``makepkg``:
+    cd /tmp
+    mkdir asus-fan-build 
+    cd asus-fan-build 
+    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
+    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install 
+    makepkg
+    pacman -U asus-fan-dkms-git-*.pkg.tar.xz
+
+**Ubuntu**
+
 As the superuser (root):
 
     cd /usr/src && \
@@ -117,5 +130,6 @@ Nevertheless that script did it worse for me than the original controller - thus
 - To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
 - To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface
 - To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
+- To Frederick Henderson [frederickjh](https://github.com/frederickjh) for ubuntu dkms support
 - To [Tharre](https://github.com/Tharre) for the never ending stream of useful hints and information
 - Various testers and users providing valuable information and thus increasing the list of compatible devices
