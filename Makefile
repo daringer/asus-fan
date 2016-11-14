@@ -1,4 +1,5 @@
-KDIR ?= /lib/modules/$(shell uname -r)/build
+KVERSION ?= $(shell uname -r)
+KDIR ?= /lib/modules/$(KVERSION)/build
 
 obj-m := asus_fan.o
 
