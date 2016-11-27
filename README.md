@@ -23,7 +23,7 @@ UX31A      | U500VZ
 UX32A      | NX500
 UX301LA    | UX32LN
 UX302LA    | UX303LB
-N551JK     |
+N551JK     | N552VX
 N56JN      |
 
 Installation with DKMS
