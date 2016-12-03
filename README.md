@@ -1,5 +1,4 @@
-asus-fan
-========
+# **asus-fan**
 
 ASUS (Zenbook) fan(s) control and monitor kernel module.
 
@@ -16,8 +15,7 @@ ASUS (Zenbook) fan(s) control and monitor kernel module.
 - [ToDos](#todos)
 - [ThanksTo](#thanks-to)
 
-Compatibilty
-------------
+## Compatibilty
 The following Notebooks should be supported - be aware that it's still not in production state
 
 Single Fan | Two Fans (NVIDIA)
@@ -32,16 +30,14 @@ UX302LA    | UX303LB
 N551JK     | N552VX
 N56JN      |
 
-Installation with DKMS
-----------------------
+## Installation with DKMS
 Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
 
 Installing the asus-fan kernel module with DKMS means that when you upgrade to a new kernel you do not need to repeat the process outlined below in the Quickstart section each time. The asus-fan kernel module will automatically be rebuilt when a new kernel is installed.
 
 More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community/DKMS)
 
-**ArchLinux**
-
+### ArchLinux
 Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the [install script](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install) and run ``makepkg``:
     
     cd /tmp
@@ -52,8 +48,7 @@ Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/mast
     makepkg
     sudo pacman -U asus-fan-dkms-git-*.pkg.tar.xz
 
-**Ubuntu**
-
+### Ubuntu
 As the superuser (root):
 
     cd /usr/src && \
@@ -72,9 +67,7 @@ Using sudo:
     sudo dkms install -m asus_fan -v master
     sudo echo asus_fan >>/etc/modules
 
-Quickstart
-----------
-
+## Quickstart
 - **Build** - just run ```make``` inside the directory
 - **Install** - run ```sudo make install``` inside the directory
 - **Load** - simply as usual:
@@ -85,7 +78,7 @@ modprobe asus_fan
 ```bash
 /sys/class/hwmon/hwmonX
 ```
-- **Monitor Fan speed** - simply use xsensors or psensors for graphical, or sensors for console monitoring
+- **Monitor Fan speed** - simply use [xsensors](http://www.linuxhardware.org/xsensors/) or [psensors](http://wpitchoune.net/psensor/) for graphical, or [sensors](http://www.lm-sensors.org/) for console monitoring. My personal preference is [conky](https://github.com/brndnmtthws/conky)---there are alot [linux system monitors](https://lmgtfy.com/?q=linux+system+monitor).
 
 - **Set Fan Speed** - write anything from 0 to 255 to ```pwmX```, like:
 ```bash
@@ -102,8 +95,7 @@ echo 0 > ${fpath}/pwmX_enable   # reset to auto-mode (always for all fans)
 - **Max fan speed** There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
 
 
-Short Comparison To Other Similar Projects
-------------------------------------------
+## Short Comparison To Other Similar Projects
 - [asus-fancontrol](https://github.com/nicolai-rostov/asus-fancontrol) userland application, acpi_call based, limited number of (offical/tested) compatible zenbook models, no (standard) interface exposed, no support for second fan
 - [zenbook](https://github.com/juyrjola/zenbook) userland appliaction, acpi_call based, only UX32VD supported, no (standard) interface exposed, no support for second fan
 - [asusfan](https://github.com/gpiemont/asusfan) kernelspace driver, model support: A8J, A8JS, N50V[cn], no (standard) interface exposed, interface based on module parameters, replaces automatic control with own realization, no support for second fan
@@ -115,35 +107,36 @@ Short Comparison To Other Similar Projects
 So this [project](https://github.com/daringer/asus-fan) distinguishes itself from the others by providing a **hwmon standard state-of-art interface** with a wide variety of **supported zenbook models** realized as a **kernelspace driver**. Guess you found the *right* one ;)
 
 
-Tools / Configs / Simple Fancontrol Script
-------------------------------------------
-
-- **fancontrol** - There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature...
-thats done by "pwmconfig"
+## Tools / Configs / Simple Fancontrol Script
+### fancontrol script
+There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature, thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
 
-- **DEBUG=1** may be passed to make to build the module in debug-mode. `dmesg` will then contain alot more debug output for the module:
+### debug module
+`DEBUG=1` may be passed to make to build the module in debug-mode. `dmesg` will then contain alot more debug output for the module:
+
 ```bash
   make DEBUG=1
   sudo rmmod asus-fan
   sudo insmod asus-fan.ko
 ```
-- **force_load=1** may be passed as an argument during module loading to skip the device checks and tests. USE THIS ONLY WITH CAUTION FOR TESTING:
+### force load module 
+**USE THIS ONLY WITH CAUTION FOR TESTING, UNFORSEEABLE THINGS MAY HAPPEN! YOU'VE BEEN WARNED...**
+`force_load=1` may be passed as an argument during module loading to skip the device checks and tests:
+
 ```bash
   sudo rmmod asus-fan
   sudo insmod asus-fan.ko force_load=1
 ```
 
-**TODOs**:
-----------
+## TODOs:
 - do a code review and clean it up
 - check with more models
 - add an included fan controller
 - submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??
 
 
-**THANKS TO**:
---------------
+## THANKS TO:
 - To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
 - To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface
 - To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
