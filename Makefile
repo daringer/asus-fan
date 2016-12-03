@@ -1,6 +1,10 @@
 KVERSION ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KVERSION)/build
 
+ifeq ($(DEBUG), 1)
+    CFLAGS_asus_fan.o += -DDEBUG
+endif
+
 obj-m := asus_fan.o
 
 all:
