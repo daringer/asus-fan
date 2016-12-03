@@ -4,9 +4,15 @@ asus-fan
 ASUS (Zenbook) fan(s) control and monitor kernel module.
 
 - [Compatibilty](#compatibilty)
+- [Installation with DKMS](#installation-with-dkms)
+  - [ArchLinux](#archlinux)
+  - [Ubuntu](#ubuntu)
 - [Quickstart](#quickstart)
 - [Short Comparison To Other Similar Projects](#short-comparison-to-other-similar-projects)
 - [Tools/Configs/Misc](#tools--configs--simple-fancontrol-script)
+  - [fancontrol script](#fancontrol-script)
+  - [build module in debug-mode](#debug-module)
+  - [force loading of module](#force-load)
 - [ToDos](#todos)
 - [ThanksTo](#thanks-to)
 
@@ -79,8 +85,7 @@ modprobe asus_fan
 ```bash
 /sys/class/hwmon/hwmonX
 ```
-- **Monitor Fan speed** -simply use xsensors or psensors for graphical, or sensors for console monitoring
-```
+- **Monitor Fan speed** - simply use xsensors or psensors for graphical, or sensors for console monitoring
 
 - **Set Fan Speed** - write anything from 0 to 255 to ```pwmX```, like:
 ```bash
@@ -116,6 +121,18 @@ Tools / Configs / Simple Fancontrol Script
 - **fancontrol** - There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature...
 thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
+
+- **DEBUG=1** may be passed to make to build the module in debug-mode. `dmesg` will then contain alot more debug output for the module:
+```bash
+  make DEBUG=1
+  sudo rmmod asus-fan
+  sudo insmod asus-fan.ko
+```
+- **force_load=1** may be passed as an argument during module loading to skip the device checks and tests. USE THIS ONLY WITH CAUTION FOR TESTING:
+```bash
+  sudo rmmod asus-fan
+  sudo insmod asus-fan.ko force_load=1
+```
 
 **TODOs**:
 ----------
