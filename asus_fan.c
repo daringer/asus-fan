@@ -340,10 +340,11 @@ static int __fan_set_cur_control_state(int fan, int state) {
 }
 
 static int fan_set_speed(int fan, int speed) {
-  dbg_msg("fan-id: %d | set speed: %d", fan, speed);
   // struct acpi_object_list params;
   union acpi_object args[2];
   unsigned long long value;
+  
+  dbg_msg("fan-id: %d | set speed: %d", fan, speed);
 
   // set speed to 'speed' for given 'fan'-index
   // -> automatically switch to manual mode!
