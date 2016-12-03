@@ -23,7 +23,10 @@ MODULE_AUTHOR("Bernd Kast <kastbernd@gmx.de>");
 MODULE_DESCRIPTION("ASUS fan driver (ACPI)");
 MODULE_LICENSE("GPL");
 
-// These defines are taken from asus-nb-wmi
+//////
+////// DEFINES / MACROS
+//////
+
 #define to_platform_driver(drv) \
   (container_of((drv), struct platform_driver, driver))
 #define to_asus_fan_driver(pdrv) \
@@ -34,6 +37,16 @@ MODULE_LICENSE("GPL");
 
 #define TEMP1_CRIT 105
 #define TEMP1_LABEL "gfx_temp"
+
+#ifndef DEBUG
+#define DEBUG (false)
+#else
+#define DEBUG (true)
+#endif
+
+#define DBGMSG(fmt, ...) \
+  do { if (DEBUG) printk(KERN_INFO fmt, __VA__ARGS__); } while (0)
+
 
 struct asus_fan_driver {
   const char *name;
@@ -82,6 +95,10 @@ static char *gfx_fan_desc = "GFX Fan";
 static int fan_minimum = 10;
 static int fan_minimum_gfx = 10;
 
+// force loading i.e., skip device existance check 
+static short force_load = false;
+
+// housekeeping structs
 static struct asus_fan_driver asus_fan_driver = {
     .name = DRIVER_NAME, .owner = THIS_MODULE,
 };
@@ -90,6 +107,14 @@ bool used;
 static struct attribute *platform_attributes[] = {NULL};
 static struct attribute_group platform_attribute_group = {
     .attrs = platform_attributes};
+
+//////
+////// MODULE PARAMETER(S)
+//////
+
+module_param(force_load, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(force_load, \
+    "Force loading of module---omit device existance check");
 
 //////
 ////// FUNCTION PROTOTYPES
@@ -753,9 +778,14 @@ int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver) {
 static int __init fan_init(void) {
   acpi_status ret;
   int rpm;
-  // identify system/model/platform
-  if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
 
+  // load without identification
+  if (force_load) {
+    has_gfx_fan = true;
+    printk(KERN_INFO "asus-fan (init) - forced loading of module: USE WITH CARE");
+
+  // identify system/model/platform
+  } else if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
     rpm = __fan_rpm(0);
     if (rpm == -1)
       return -ENODEV;
@@ -781,14 +811,14 @@ static int __init fan_init(void) {
              ret);
       return -ENODEV;
     }
+  }
 
-    ret = asus_fan_register_driver(&asus_fan_driver);
-    if (ret != AE_OK) {
-      printk(KERN_INFO
-             "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
-             max_fan_speed_default, ret);
-      return ret;
-    }
+  ret = asus_fan_register_driver(&asus_fan_driver);
+  if (ret != AE_OK) {
+    printk(KERN_INFO
+           "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
+           max_fan_speed_default, ret);
+    return ret;
   }
   printk(KERN_INFO "asus-fan (init) - finished init\n");
   return 0;
