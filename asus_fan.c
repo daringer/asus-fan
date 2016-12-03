@@ -41,6 +41,7 @@ MODULE_LICENSE("GPL");
 #ifndef DEBUG
 #define DEBUG (false)
 #else
+#undef DEBUG
 #define DEBUG (true)
 #endif
 
@@ -290,8 +291,9 @@ RPMs	PWM
 950	45
 790	40
 */
-  dbg_msg("reading rpm for fan: %d", fan);
   int rpm = __fan_rpm(fan);
+  
+  dbg_msg("fan-id: %d | get RPM", fan);
 
   if (fan_manual_mode[fan]) {
     *state = fan_states[fan];
@@ -311,10 +313,10 @@ RPMs	PWM
 
 static int __fan_set_cur_state(int fan, unsigned long state) {
 
-  dbg_msg("set fan-id: %d to state: %d", fan, state);
+  dbg_msg("fan-id: %d | set state: %d", fan, state);
   // catch illegal state set
   if (state > 255) {
-    warn_msg("set pwm", "illegal value provided: %d ", fan, (unsigned int) state);
+    warn_msg("set pwm", "illegal value provided: %d ", fan, state);
     return 1;
   }
 
@@ -324,13 +326,13 @@ static int __fan_set_cur_state(int fan, unsigned long state) {
 }
 
 static int __fan_get_cur_control_state(int fan, int *state) {
-  dbg_msg("get fan-id: %d state", fan);
+  dbg_msg("fan-id: %d | get control state", fan);
   *state = fan_manual_mode[fan];
   return 0;
 }
 
 static int __fan_set_cur_control_state(int fan, int state) {
-  dbg_msg("set fan-id: %d control-state", fan, state);
+  dbg_msg("fan-id: %d | set control state: %d", fan, state);
   if (state == 0) {
     return fan_set_auto();
   }
@@ -338,7 +340,7 @@ static int __fan_set_cur_control_state(int fan, int state) {
 }
 
 static int fan_set_speed(int fan, int speed) {
-  dbg_msg("set fan-id: %d to speed: %d", fan, speed);
+  dbg_msg("fan-id: %d | set speed: %d", fan, speed);
   // struct acpi_object_list params;
   union acpi_object args[2];
   unsigned long long value;
@@ -369,16 +371,21 @@ static int __fan_rpm(int fan) {
   unsigned long long value;
   acpi_status ret;
 
-  dbg_msg("get fan-id: %d rpm", fan);
+  dbg_msg("fan-id: %d | get RPM", fan);
 
   // fan does not report during manual speed setting - so fake it!
   if (fan_manual_mode[fan]) {
     value = fan_states[fan] * fan_states[fan] * 1000 / -16054 +
             fan_states[fan] * 32648 / 1000 - 365;
+
+    dbg_msg("|--> get RPM for manual mode, calculated: %d", value); 
+
     if (value > 10000)
       return 0;
   } else {
 
+    dbg_msg("|--> get RPM using acpi");
+    
     // getting current fan 'speed' as 'state',
     params.count = ARRAY_SIZE(args);
     params.pointer = args;
@@ -387,13 +394,16 @@ static int __fan_rpm(int fan) {
     args[0].type = ACPI_TYPE_INTEGER;
     args[0].integer.value = fan;
 
+    dbg_msg("|--> evaluate acpi request: \\_SB.PCI0.LPCB.EC0.TACH");
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params,
                                 &value);
+
+    dbg_msg("|--> acpi request returned: %d", (unsigned int) ret);
     if (ret != AE_OK)
       return -1;
   }
-  return (int)value;
+  return (int) value;
 }
 static ssize_t fan_rpm(struct device *dev, struct device_attribute *attr,
                        char *buf) {
@@ -475,7 +485,7 @@ static ssize_t fan_set_cur_control_state(struct device *dev,
 // the 'get_max' function
 static int fan_get_max_speed(unsigned long *state) {
 
-  dbg_msg("get max speed");
+  dbg_msg("fan-id: (both) | get max speed");
   *state = max_fan_speed_setting;
   return 0;
 }
@@ -486,7 +496,8 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
   acpi_status ret;
   int arg_qmod = 1;
   
-  dbg_msg("set max speed to: %d, force reset: %d", state, (unsigned int) reset);
+  dbg_msg("fan-id: (both) | set max speed: %d, force reset: %d", \
+      state, (unsigned int) reset);
 
   // if reset is 'true' ignore anything else and reset to
   // -> auto-mode with max-speed
@@ -548,7 +559,7 @@ static int fan_set_auto() {
   unsigned long long value;
   acpi_status ret;
 
-  dbg_msg("set to automatic mode");
+  dbg_msg("fan-id: (both) | set to automatic mode");
 
   // setting (both) to auto-mode simultanously
   fan_manual_mode[0] = false;
@@ -627,7 +638,7 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
     acpi_status ret;
     unsigned long long int value;
 
-    dbg_msg("get temperature 1 from acpi"); 
+    dbg_msg("temp-id: 1 | get (acpi eval)"); 
 
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
@@ -816,7 +827,8 @@ static int __init fan_init(void) {
   acpi_status ret;
   int rpm;
 
-  dbg_msg("starting init procedure");
+  dbg_msg("starting initialization...");
+  dbg_msg("dmi sys info: '%s'", dmi_get_system_info(DMI_SYS_VENDOR));
 
   // load without identification
   if (force_load) {
@@ -826,11 +838,14 @@ static int __init fan_init(void) {
   // identify system/model/platform
   } else if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
 
-    dbg_msg("dmi sys info: '%s'", dmi_get_system_info(DMI_SYS_VENDOR));
-
+    // try to get RPM for first fan 
     rpm = __fan_rpm(0);
-    if (rpm == -1)
+    if (rpm == -1) {
+      err_msg("init", "fan-id: 1 | failed to get testdata, no device exists?"); 
       return -ENODEV;
+    }
+
+    // try to get RPM for second fan, indicates if it is available
     rpm = __fan_rpm(1);
     if (rpm == -1)
       has_gfx_fan = false;
