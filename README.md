@@ -45,20 +45,15 @@ Scripted Ubuntu DKMS Setup for Asus Fan Module
 
 Manual Ubuntu DKMS Setup for Asus Fan Module
 ---------------------
-As the superuser (root):
-
-    cd /usr/src && \
-      wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz && \
-      tar xvf asus-fan-master.tar.gz
-    dkms add -m asus_fan -v master
-    dkms install -m asus_fan -v master
-    echo asus_fan >>/etc/modules
-
-Using sudo:
-
     cd /usr/src
-    sudo wget -o asus-fan-master.tar.gz https://github.com/daringer/asus-fan/archive/master.tar.gz && \
-      sudo tar xvf asus-fan-master.tar.gz
+    sudo wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz
+    sudo mkdir asus_fan-master
+    cd asus_fan-master
+    sudo tar xpvf ../asus_fan.tar.gz --strip-components=1
+    sudo  tar xpvf ../asus_fan.tar.gz --strip-component
+    sudo  mv dkms.conf dkms.conf.archlinux
+    sudo mv dkms-ubuntu.conf dkms.conf
+    cd ..
     sudo dkms add -m asus_fan -v master
     sudo dkms install -m asus_fan -v master
     sudo echo asus_fan >>/etc/modules
