@@ -34,6 +34,17 @@ Installing the asus-fan kernel module with DKMS means that when you upgrade to a
 
 More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community/DKMS)
 
+Scripted Ubuntu DKMS Setup for Asus Fan Module
+--------------------
+* Download the `ubuntu_dkms_sudo_install.sh` script from the `misc` folder of this repository. (ie. right-click over **Raw** > select **Save link as...**)
+* Make sure the script is executable (ie. `chmod +x ubuntu_dkms_sudo_install.sh`)
+* Run the script (ie. `./ubuntu_dkms_sudo_install.sh`)
+* The script will need super user powers and will ask you to enter your password to get sudo permissions
+* Check that the module has been built and installed with `lsmod | grep asus_fan`. If you get something lik **asus_fan               14880  0** you are good. If you get nothing the module is not loaded.
+
+
+Manual Ubuntu DKMS Setup for Asus Fan Module
+---------------------
 As the superuser (root):
 
     cd /usr/src && \
@@ -52,7 +63,7 @@ Using sudo:
     sudo dkms install -m asus_fan -v master
     sudo echo asus_fan >>/etc/modules
 
-Quickstart
+Quickstart - Manual installation
 ----------
 
 - **Build** - just run ```make``` inside the directory
