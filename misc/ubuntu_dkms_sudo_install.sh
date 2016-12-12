@@ -67,7 +67,7 @@ function downloadandunpack(){
 echo -e "${yellow}>>>> ${NC}I will now download and install the asus_fan module. I will need super user permissions. You will be asked for the sudo password."
   cd /usr/src
 echo -e "${yellow}>>>> ${NC}Now downloading to module src to /usr/scr."
-run_sudo_command wget -O asus_fan.tar.gz https://github.com/daringer/asus-fan/tarball/master
+run_sudo_command wget -O asus_fan.tar.gz https://github.com/frederickjh/asus-fan/tarball/master
 run_sudo_command mkdir asus_fan-master
 cd asus_fan-master
 run_sudo_command tar xpvf ../asus_fan.tar.gz --strip-components=1
