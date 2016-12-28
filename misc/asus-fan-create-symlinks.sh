@@ -17,7 +17,8 @@ function usage() {
 # This function is used to check the Linux distribution and release version.
 # Currently we are checking for Ubuntu as some paths are different.
 function linuxdistroandversioncheck(){
-  linuxdistro=$(lsb_release -si)
+  linuxdistro="unknown" # Set it so that the variable is present when we check it.
+  linuxdistro=$(lsb_release -si &>/dev/null)
 #  linuxarch=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/') # Currently not using for possible future use.
 #  linuxversion=$(lsb_release -sr) # Currently not using for possible future use.
 }
