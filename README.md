@@ -42,21 +42,81 @@ Scripted Ubuntu DKMS Setup for Asus Fan Module
 * The script will need super user powers and will ask you to enter your password to get sudo permissions
 * Check that the module has been built and installed with `lsmod | grep asus_fan`. If you get something lik **asus_fan               14880  0** you are good. If you get nothing the module is not loaded.
 
+<a name="ubuntu-symlink">Ubuntu - Symlink Creation on reboot</a>
+---------------------
+Symlinks will need to be created each time. The `asus-fan-create-symlinks.sh` is designed for this purpose, however it must be run after each reboot to create these links.
+
+If you used the `ubuntu_dkms_sudo_install.sh` installation script above the `asus-fan-ubuntu-create-symlinks.sh` will have been installed at `/usr/local/sbin/asus-fan-create-symlinks.sh`.
+
+For Ubuntu 14.04 using the Upstart init system add the following to the Thermald upstart configuration file, `/etc/init/thermald.conf
+
+``` bash
+pre-start script
+if [ ! -d  /tmp/asus-fan-shm ]; then
+/usr/local/sbin/asus-fan-create-symlinks.sh
+echo " * creating symlinks ..."
+fi
+end script
+```
+
+My full `/etc/init/thermald.conf` looks like this:
+
+``` bash
+# thermald - thermal daemon
+# Upstart configuration file
+# Manages platform thermals
+
+description	"thermal daemon"
+
+start on runlevel [2345] and started dbus
+stop on stopping dbus
+
+#
+# don't respawn on error
+#
+normal exit 1
+
+respawn
+
+#
+# consider something wrong if respawned 10 times in 1 minute
+#
+respawn limit 10 60
+
+pre-start script
+if [ ! -d  /tmp/asus-fan-shm ]; then
+/usr/local/sbin/asus-fan-create-symlinks.sh
+echo " * creating symlinks ..."
+fi
+end script
+
+exec thermald --no-daemon --dbus-enable
+```
+
+Troubleshooting Symlinks
+---------------------
+Runing `ls -l /tmp/asus-fan-shm/` will list the sysmlinks created. If it looks like you are missing some (this depends on the Asus laptop you have as to how many and which ones you will have) you can run `sudo asus-fan-create-symlinks.sh`. This will delete the links in the folder and recreate them. A number of them are only created if they are readable.
+
 
 Manual Ubuntu DKMS Setup for Asus Fan Module
 ---------------------
-    cd /usr/src
-    sudo wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz
-    sudo mkdir asus_fan-master
-    cd asus_fan-master
-    sudo tar xpvf ../asus_fan.tar.gz --strip-components=1
-    sudo  tar xpvf ../asus_fan.tar.gz --strip-component
-    sudo  mv dkms.conf dkms.conf.archlinux
-    sudo mv dkms-ubuntu.conf dkms.conf
-    cd ..
-    sudo dkms add -m asus_fan -v master
-    sudo dkms install -m asus_fan -v master
-    sudo echo asus_fan >>/etc/modules
+``` bash
+cd /usr/src
+sudo wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz
+sudo mkdir asus_fan-master
+cd asus_fan-master
+sudo tar xpvf ../asus_fan.tar.gz --strip-components=1
+sudo  tar xpvf ../asus_fan.tar.gz --strip-component
+sudo  mv dkms.conf dkms.conf.archlinux
+sudo mv dkms-ubuntu.conf dkms.conf
+cd ..
+sudo dkms add -m asus_fan -v master
+sudo dkms install -m asus_fan -v master
+sudo echo asus_fan >>/etc/modules
+sudo cp misc/asus-fan-create-symlinks.sh /usr/local/sbin/asus-fan-create-symlinks.sh
+```
+
+For Ubuntu 14.04 you will also need to add the lines mention above in the **[Ubuntu - Symlink Creation on reboot](#ubuntu-symlink)** section to  `/etc/init/thermald.conf` so that symlinks get created at each reboot by the Upstart init system. Newer versions of Ubuntu use the Systemd init system and not Upstart.
 
 Quickstart - Manual installation
 ----------
