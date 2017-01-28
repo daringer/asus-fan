@@ -1,17 +1,21 @@
-asus-fan
-========
+# **asus-fan**
 
 ASUS (Zenbook) fan(s) control and monitor kernel module.
 
 - [Compatibilty](#compatibilty)
+- [Installation with DKMS](#installation-with-dkms)
+  - [ArchLinux](#archlinux)
+  - [Ubuntu](#ubuntu)
 - [Quickstart](#quickstart)
 - [Short Comparison To Other Similar Projects](#short-comparison-to-other-similar-projects)
 - [Tools/Configs/Misc](#tools--configs--simple-fancontrol-script)
+  - [fancontrol script](#fancontrol-script)
+  - [build module in debug-mode](#debug-module)
+  - [force loading of module](#force-load)
 - [ToDos](#todos)
 - [ThanksTo](#thanks-to)
 
-Compatibilty
-------------
+## Compatibilty
 The following Notebooks should be supported - be aware that it's still not in production state
 
 Single Fan | Two Fans (NVIDIA)
@@ -23,11 +27,10 @@ UX31A      | U500VZ
 UX32A      | NX500
 UX301LA    | UX32LN
 UX302LA    | UX303LB
-N551JK     |
+N551JK     | N552VX
 N56JN      |
 
-Installation with DKMS
-----------------------
+## Installation with DKMS
 Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
 
 Installing the asus-fan kernel module with DKMS means that when you upgrade to a new kernel you do not need to repeat the process outlined below in the Quickstart section each time. The asus-fan kernel module will automatically be rebuilt when a new kernel is installed.
@@ -75,6 +78,20 @@ stop on stopping dbus
 # don't respawn on error
 #
 normal exit 1
+
+### ArchLinux
+Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the [install script](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install) and run ``makepkg``:
+    
+    cd /tmp
+    mkdir asus-fan-build 
+    cd asus-fan-build 
+    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
+    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install 
+    makepkg
+    sudo pacman -U asus-fan-dkms-git-*.pkg.tar.xz
+
+### Ubuntu
+As the superuser (root):
 
 respawn
 
@@ -131,14 +148,13 @@ modprobe asus_fan
 ```bash
 /sys/class/hwmon/hwmonX
 ```
-- **Monitor Fan speed** -simply use xsensors or psensors for graphical, or sensors for console monitoring
-```
+- **Monitor Fan speed** - simply use [xsensors](http://www.linuxhardware.org/xsensors/) or [psensors](http://wpitchoune.net/psensor/) for graphical, or [sensors](http://www.lm-sensors.org/) for console monitoring. My personal preference is [conky](https://github.com/brndnmtthws/conky)---there are alot [linux system monitors](https://lmgtfy.com/?q=linux+system+monitor).
 
 - **Set Fan Speed** - write anything from 0 to 255 to ```pwmX```, like:
 ```bash
 echo 123 > ${fpath}/pwmX   # set to 123
 echo 0 > ${fpath}/pwmX     # switch fan off (DANGEROUS!)
-echo 255 > ${fpath}/pwmX   # set to max speed
+echo 255 >= ${fpath}/pwmX   # set to max speed
 ```
 - **ATTENTION** - the fan is now in manual mode - do not burn your machine!
 - **Set Auto-Fan(s)**: to reactivate the automatic fan control write "0" to ```pwmX_enable```:
@@ -149,8 +165,7 @@ echo 0 > ${fpath}/pwmX_enable   # reset to auto-mode (always for all fans)
 - **Max fan speed** There is an additional file for controling the maximum fan speed. It's r/w and controls both, automatic mode and manual mode maximum speed. Value range: 0-255 reset value:256
 
 
-Short Comparison To Other Similar Projects
-------------------------------------------
+## Short Comparison To Other Similar Projects
 - [asus-fancontrol](https://github.com/nicolai-rostov/asus-fancontrol) userland application, acpi_call based, limited number of (offical/tested) compatible zenbook models, no (standard) interface exposed, no support for second fan
 - [zenbook](https://github.com/juyrjola/zenbook) userland appliaction, acpi_call based, only UX32VD supported, no (standard) interface exposed, no support for second fan
 - [asusfan](https://github.com/gpiemont/asusfan) kernelspace driver, model support: A8J, A8JS, N50V[cn], no (standard) interface exposed, interface based on module parameters, replaces automatic control with own realization, no support for second fan
@@ -162,26 +177,39 @@ Short Comparison To Other Similar Projects
 So this [project](https://github.com/daringer/asus-fan) distinguishes itself from the others by providing a **hwmon standard state-of-art interface** with a wide variety of **supported zenbook models** realized as a **kernelspace driver**. Guess you found the *right* one ;)
 
 
-Tools / Configs / Simple Fancontrol Script
-------------------------------------------
-
-- **fancontrol** - There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature...
-thats done by "pwmconfig"
+## Tools / Configs / Simple Fancontrol Script
+### fancontrol script
+There is a script called "fancontrol" that can be configured according to temperature source, fans to control, minimum and maximum temperature, thats done by "pwmconfig"
 Nevertheless that script did it worse for me than the original controller - thus you can tell it to stop the fan completely...
 
-**TODOs**:
-----------
+### debug module
+`DEBUG=1` may be passed to make to build the module in debug-mode. `dmesg` will then contain alot more debug output for the module:
+
+```bash
+  make DEBUG=1
+  sudo rmmod asus-fan
+  sudo insmod asus-fan.ko
+```
+### force load module 
+**USE THIS ONLY WITH CAUTION FOR TESTING, UNFORSEEABLE THINGS MAY HAPPEN! YOU'VE BEEN WARNED...**
+`force_load=1` may be passed as an argument during module loading to skip the device checks and tests:
+
+```bash
+  sudo rmmod asus-fan
+  sudo insmod asus-fan.ko force_load=1
+```
+
+## TODOs:
 - do a code review and clean it up
 - check with more models
 - add an included fan controller
-- setting 'fanX_max' to 256 in order to reset all values to default, seems not a standard behavior --- where to put this functionality?
 - submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??
 
 
-**THANKS TO**:
---------------
+## THANKS TO:
 - To Felipe Contreras [felipec](https://github.com/felipec) for providing the initial version (https://gist.github.com/felipec/6169047)
 - To Markus Meissner [daringer](https://github.com/daringer) for the asus_fan version using the "thermal_device" interface
 - To Bernd Kast [KastB](https://github.com/KastB) for the port using the hwmon interface
+- To Frederick Henderson [frederickjh](https://github.com/frederickjh) for ubuntu dkms support
 - To [Tharre](https://github.com/Tharre) for the never ending stream of useful hints and information
 - Various testers and users providing valuable information and thus increasing the list of compatible devices

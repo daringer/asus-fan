@@ -23,7 +23,10 @@ MODULE_AUTHOR("Bernd Kast <kastbernd@gmx.de>");
 MODULE_DESCRIPTION("ASUS fan driver (ACPI)");
 MODULE_LICENSE("GPL");
 
-// These defines are taken from asus-nb-wmi
+//////
+////// DEFINES / MACROS
+//////
+
 #define to_platform_driver(drv) \
   (container_of((drv), struct platform_driver, driver))
 #define to_asus_fan_driver(pdrv) \
@@ -34,6 +37,33 @@ MODULE_LICENSE("GPL");
 
 #define TEMP1_CRIT 105
 #define TEMP1_LABEL "gfx_temp"
+
+#ifndef DEBUG
+#define DEBUG (false)
+#else
+#undef DEBUG
+#define DEBUG (true)
+#endif
+
+#define dbg_msg(fmt, ...) \
+  do { \
+    if (DEBUG) printk(KERN_INFO "asus-fan (debug) - " fmt "\n", ##__VA_ARGS__); \
+  } while (0)
+
+#define info_msg(title, fmt, ...) \
+  do { \
+    printk(KERN_INFO "asus-fan (" title ") - " fmt "\n", ##__VA_ARGS__); \
+  } while (0)
+
+#define err_msg(title, fmt, ...) \
+  do { \
+    printk(KERN_ERR "asus-fan (" title ") - " fmt "\n", ##__VA_ARGS__); \
+  } while (0)
+
+#define warn_msg(title, fmt, ...) \
+  do { \
+    printk(KERN_WARNING "asus-fan (" title ") - " fmt "\n", ##__VA_ARGS__); \
+  } while (0)
 
 struct asus_fan_driver {
   const char *name;
@@ -82,6 +112,10 @@ static char *gfx_fan_desc = "GFX Fan";
 static int fan_minimum = 10;
 static int fan_minimum_gfx = 10;
 
+// force loading i.e., skip device existance check 
+static short force_load = false;
+
+// housekeeping structs
 static struct asus_fan_driver asus_fan_driver = {
     .name = DRIVER_NAME, .owner = THIS_MODULE,
 };
@@ -90,6 +124,14 @@ bool used;
 static struct attribute *platform_attributes[] = {NULL};
 static struct attribute_group platform_attribute_group = {
     .attrs = platform_attributes};
+
+//////
+////// MODULE PARAMETER(S)
+//////
+
+module_param(force_load, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(force_load, \
+    "Force loading of module---omit device existance check");
 
 //////
 ////// FUNCTION PROTOTYPES
@@ -250,6 +292,8 @@ RPMs	PWM
 790	40
 */
   int rpm = __fan_rpm(fan);
+  
+  dbg_msg("fan-id: %d | get RPM", fan);
 
   if (fan_manual_mode[fan]) {
     *state = fan_states[fan];
@@ -269,10 +313,10 @@ RPMs	PWM
 
 static int __fan_set_cur_state(int fan, unsigned long state) {
 
+  dbg_msg("fan-id: %d | set state: %d", fan, state);
   // catch illegal state set
   if (state > 255) {
-    printk(KERN_INFO "asus-fan (set pwm%d) - illegal value provided: %d \n",
-           fan, (unsigned int) state);
+    warn_msg("set pwm", "illegal value provided: %d ", fan, state);
     return 1;
   }
 
@@ -282,11 +326,13 @@ static int __fan_set_cur_state(int fan, unsigned long state) {
 }
 
 static int __fan_get_cur_control_state(int fan, int *state) {
+  dbg_msg("fan-id: %d | get control state", fan);
   *state = fan_manual_mode[fan];
   return 0;
 }
 
 static int __fan_set_cur_control_state(int fan, int state) {
+  dbg_msg("fan-id: %d | set control state: %d", fan, state);
   if (state == 0) {
     return fan_set_auto();
   }
@@ -297,6 +343,8 @@ static int fan_set_speed(int fan, int speed) {
   // struct acpi_object_list params;
   union acpi_object args[2];
   unsigned long long value;
+  
+  dbg_msg("fan-id: %d | set speed: %d", fan, speed);
 
   // set speed to 'speed' for given 'fan'-index
   // -> automatically switch to manual mode!
@@ -324,14 +372,21 @@ static int __fan_rpm(int fan) {
   unsigned long long value;
   acpi_status ret;
 
+  dbg_msg("fan-id: %d | get RPM", fan);
+
   // fan does not report during manual speed setting - so fake it!
   if (fan_manual_mode[fan]) {
     value = fan_states[fan] * fan_states[fan] * 1000 / -16054 +
             fan_states[fan] * 32648 / 1000 - 365;
+
+    dbg_msg("|--> get RPM for manual mode, calculated: %d", value); 
+
     if (value > 10000)
       return 0;
   } else {
 
+    dbg_msg("|--> get RPM using acpi");
+    
     // getting current fan 'speed' as 'state',
     params.count = ARRAY_SIZE(args);
     params.pointer = args;
@@ -340,35 +395,38 @@ static int __fan_rpm(int fan) {
     args[0].type = ACPI_TYPE_INTEGER;
     args[0].integer.value = fan;
 
+    dbg_msg("|--> evaluate acpi request: \\_SB.PCI0.LPCB.EC0.TACH");
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params,
                                 &value);
+
+    dbg_msg("|--> acpi request returned: %d", (unsigned int) ret);
     if (ret != AE_OK)
       return -1;
   }
-  return (int)value;
+  return (int) value;
 }
 static ssize_t fan_rpm(struct device *dev, struct device_attribute *attr,
                        char *buf) {
-  return sprintf(buf, "%d\n", __fan_rpm(0));
+  return sprintf(buf, "%d", __fan_rpm(0));
 }
 static ssize_t fan_rpm_gfx(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d\n", __fan_rpm(1));
+  return sprintf(buf, "%d", __fan_rpm(1));
 }
 
 static ssize_t fan_get_cur_state(struct device *dev,
                                  struct device_attribute *attr, char *buf) {
   unsigned long state = 0;
   __fan_get_cur_state(0, &state);
-  return sprintf(buf, "%lu\n", state);
+  return sprintf(buf, "%lu", state);
 }
 
 static ssize_t fan_get_cur_state_gfx(struct device *dev,
                                      struct device_attribute *attr, char *buf) {
   unsigned long state = 0;
   __fan_get_cur_state(1, &state);
-  return sprintf(buf, "%lu\n", state);
+  return sprintf(buf, "%lu", state);
 }
 
 static ssize_t fan_set_cur_state_gfx(struct device *dev,
@@ -394,7 +452,7 @@ static ssize_t fan_get_cur_control_state(struct device *dev,
                                          char *buf) {
   int state = 0;
   __fan_get_cur_control_state(0, &state);
-  return sprintf(buf, "%d\n", state);
+  return sprintf(buf, "%d", state);
 }
 
 static ssize_t fan_get_cur_control_state_gfx(struct device *dev,
@@ -402,7 +460,7 @@ static ssize_t fan_get_cur_control_state_gfx(struct device *dev,
                                              char *buf) {
   int state = 0;
   __fan_get_cur_control_state(1, &state);
-  return sprintf(buf, "%d\n", state);
+  return sprintf(buf, "%d", state);
 }
 
 static ssize_t fan_set_cur_control_state_gfx(struct device *dev,
@@ -428,6 +486,7 @@ static ssize_t fan_set_cur_control_state(struct device *dev,
 // the 'get_max' function
 static int fan_get_max_speed(unsigned long *state) {
 
+  dbg_msg("fan-id: (both) | get max speed");
   *state = max_fan_speed_setting;
   return 0;
 }
@@ -437,6 +496,9 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
   unsigned long long value;
   acpi_status ret;
   int arg_qmod = 1;
+  
+  dbg_msg("fan-id: (both) | set max speed: %d, force reset: %d", \
+      state, (unsigned int) reset);
 
   // if reset is 'true' ignore anything else and reset to
   // -> auto-mode with max-speed
@@ -459,10 +521,8 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.ATKD.QMOD", &params, &value);
     if (ret != AE_OK) {
-      printk(KERN_INFO
-             "asus-fan (set_max_speed) - set max fan speed(s) failed (force "
-             "reset)! errcode: %d",
-             ret);
+      err_msg("set_max_speed",
+               "set max fan speed(s) failed (force reset)! errcode: %d", ret);
       return ret;
     }
 
@@ -482,10 +542,9 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST98", &params,
                                 &value);
     if (ret != AE_OK) {
-      printk(KERN_INFO
-             "asus-fan (set_max_speed) - set max fan speed(s) failed (no "
-             "reset)! errcode: %d",
-             ret);
+      err_msg("set_max_speed",
+               "set max fan speed(s) failed (no reset) errcoded", ret);
+
       return ret;
     }
   }
@@ -500,6 +559,8 @@ static int fan_set_auto() {
   union acpi_object args[2];
   unsigned long long value;
   acpi_status ret;
+
+  dbg_msg("fan-id: (both) | set to automatic mode");
 
   // setting (both) to auto-mode simultanously
   fan_manual_mode[0] = false;
@@ -523,10 +584,11 @@ static int fan_set_auto() {
   ret =
       acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
   if (ret != AE_OK) {
-    printk(KERN_INFO
-           "asus-fan (set_auto) - failed reseting fan(s) to auto-mode! "
-           "errcode: %d - DANGER! OVERHEAT? DANGER!",
-           ret);
+    err_msg("set_auto",
+             "failed reseting fan(s) to auto-mode! "
+             "errcode: %d - DANGER! OVERHEAT? DANGER!",
+             ret);
+
     return ret;
   }
 
@@ -535,22 +597,22 @@ static int fan_set_auto() {
 
 static ssize_t fan_label(struct device *dev, struct device_attribute *attr,
                          char *buf) {
-  return sprintf(buf, "%s\n", fan_desc);
+  return sprintf(buf, "%s", fan_desc);
 }
 
 static ssize_t fan_label_gfx(struct device *dev, struct device_attribute *attr,
                              char *buf) {
-  return sprintf(buf, "%s\n", gfx_fan_desc);
+  return sprintf(buf, "%s", gfx_fan_desc);
 }
 
 static ssize_t fan_min(struct device *dev, struct device_attribute *attr,
                        char *buf) {
-  return sprintf(buf, "%d\n", fan_minimum);
+  return sprintf(buf, "%d", fan_minimum);
 }
 
 static ssize_t fan_min_gfx(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d\n", fan_minimum_gfx);
+  return sprintf(buf, "%d", fan_minimum_gfx);
 }
 
 static ssize_t set_max_speed(struct device *dev, struct device_attribute *attr,
@@ -569,7 +631,7 @@ static ssize_t get_max_speed(struct device *dev, struct device_attribute *attr,
                              char *buf) {
   unsigned long state = 0;
   fan_get_max_speed(&state);
-  return sprintf(buf, "%lu\n", state);
+  return sprintf(buf, "%lu", state);
 }
 
 static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
@@ -577,20 +639,22 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
     acpi_status ret;
     unsigned long long int value;
 
+    dbg_msg("temp-id: 1 | get (acpi eval)"); 
+
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
 
-    return sprintf(buf, "%llud\n", value*1000);
+    return sprintf(buf, "%llu", value*1000);
 }
 
 static ssize_t temp1_label(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%s\n", TEMP1_LABEL);
+  return sprintf(buf, "%s", TEMP1_LABEL);
 }
 
 static ssize_t temp1_crit(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d\n", TEMP1_CRIT);
+  return sprintf(buf, "%d", TEMP1_CRIT);
 }
 
 
@@ -666,11 +730,14 @@ __ATTRIBUTE_GROUPS(hwmon_gfx_attribute);
 
 static int asus_fan_hwmon_init(struct asus_fan *asus) {
   struct device *hwmon;
+
+  dbg_msg("init hwmon device");
+
   if (!has_gfx_fan) {
     hwmon = hwmon_device_register_with_groups(
         &asus->platform_device->dev, "asus_fan", asus, hwmon_attribute_groups);
     if (IS_ERR(hwmon)) {
-      pr_err("Could not register asus hwmon device\n");
+      err_msg("init", "could not register asus hwmon device");
       return PTR_ERR(hwmon);
     }
   } else {
@@ -678,7 +745,7 @@ static int asus_fan_hwmon_init(struct asus_fan *asus) {
                                               "asus_fan", asus,
                                               hwmon_gfx_attribute_groups);
     if (IS_ERR(hwmon)) {
-      pr_err("Could not register asus hwmon device\n");
+      err_msg("init", "could not register asus hwmon device");
       return PTR_ERR(hwmon);
     }
   }
@@ -686,6 +753,7 @@ static int asus_fan_hwmon_init(struct asus_fan *asus) {
 }
 
 static void asus_fan_sysfs_exit(struct platform_device *device) {
+  dbg_msg("remove hwmon device");
   sysfs_remove_group(&device->dev.kobj, &platform_attribute_group);
 }
 
@@ -695,6 +763,8 @@ static int asus_fan_probe(struct platform_device *pdev) {
 
   struct asus_fan *asus;
   int err = 0;
+  
+  dbg_msg("probe for device");
 
   asus = kzalloc(sizeof(struct asus_fan), GFP_KERNEL);
   if (!asus)
@@ -721,7 +791,9 @@ fail_hwmon:
 
 static int asus_fan_remove(struct platform_device *device) {
   struct asus_fan *asus;
-
+  
+  dbg_msg("remove asus_fan");
+  
   asus = platform_get_drvdata(device);
   asus_fan_sysfs_exit(asus->platform_device);
   kfree(asus);
@@ -731,6 +803,8 @@ static int asus_fan_remove(struct platform_device *device) {
 int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver) {
   struct platform_driver *platform_driver;
   struct platform_device *platform_device;
+
+  dbg_msg("register asus fan driver");
 
   if (used) {
     return -EBUSY;
@@ -753,44 +827,64 @@ int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver) {
 static int __init fan_init(void) {
   acpi_status ret;
   int rpm;
-  // identify system/model/platform
-  if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
 
+  dbg_msg("starting initialization...");
+  dbg_msg("dmi sys info: '%s'", dmi_get_system_info(DMI_SYS_VENDOR));
+
+  // load without identification
+  if (force_load) {
+    has_gfx_fan = true;
+    info_msg("init", "forced loading of module: USE WITH CARE");
+
+  // identify system/model/platform
+  } else if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
+
+    // try to get RPM for first fan 
     rpm = __fan_rpm(0);
-    if (rpm == -1)
+    if (rpm == -1) {
+      err_msg("init", "fan-id: 1 | failed to get testdata, no device exists?"); 
       return -ENODEV;
+    }
+
+    // try to get RPM for second fan, indicates if it is available
     rpm = __fan_rpm(1);
     if (rpm == -1)
       has_gfx_fan = false;
     else
       has_gfx_fan = true;
+
+    dbg_msg("__fan_rpm() calls succeeded, found %d fan(s)",
+            (unsigned int)has_gfx_fan + 1);
+
     // check if reseting fan speeds works
     ret = fan_set_max_speed(max_fan_speed_default, false);
     if (ret != AE_OK) {
-      printk(KERN_INFO
-             "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
-             max_fan_speed_default, ret);
+      err_msg("init", "set max speed to: '%d' failed! errcode: %d",
+               max_fan_speed_default, ret);
       return -ENODEV;
     }
+
+    dbg_msg("fan_set_max_speed() call succeeded, ret: %d", (unsigned int) ret);
 
     // force sane enviroment / init with automatic fan controlling
     if ((ret = fan_set_auto()) != AE_OK) {
-      printk(KERN_INFO
-             "asus-fan (init) - set auto-mode speed to active, failed! "
-             "errcode: %d",
-             ret);
+      err_msg("init", "set auto-mode speed to active, failed! errcode: %d",
+               ret);
       return -ENODEV;
     }
 
-    ret = asus_fan_register_driver(&asus_fan_driver);
-    if (ret != AE_OK) {
-      printk(KERN_INFO
-             "asus-fan (init) - set max speed to: '%d' failed! errcode: %d",
-             max_fan_speed_default, ret);
-      return ret;
-    }
+    dbg_msg("fan_set_auto() call succeeded, ret: %d", (unsigned int) ret);
   }
-  printk(KERN_INFO "asus-fan (init) - finished init\n");
+
+  ret = asus_fan_register_driver(&asus_fan_driver);
+  if (ret != AE_OK) {
+    err_msg("init", "set max speed to: '%d' failed! errcode: %d",
+             max_fan_speed_default, ret);
+    return ret;
+  }
+  info_msg("init", "finished init, found %d fan(s) to control",
+           (unsigned int)has_gfx_fan + 1);
+
   return 0;
 }
 
@@ -805,7 +899,7 @@ static void __exit fan_exit(void) {
   asus_fan_unregister_driver(&asus_fan_driver);
   used = false;
 
-  printk(KERN_INFO "asus-fan (exit) - module unloaded - cleaning up...\n");
+  info_msg("exit", "module unloaded---cleaning up");
 }
 
 module_init(fan_init);
