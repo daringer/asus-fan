@@ -71,7 +71,14 @@ run_sudo_command wget -O asus_fan.tar.gz https://github.com/daringer/asus-fan/ta
 run_sudo_command mkdir asus_fan-master
 cd asus_fan-master
 run_sudo_command tar xpvf ../asus_fan.tar.gz --strip-components=1
+run_sudo_command mv dkms.conf dkms.conf.archlinux # Rename Archlinux version to get it out of the way
+run_sudo_command mv dkms-ubuntu.conf dkms.conf # Rename Ubuntu version to the correct name
 cd ..
+}
+function installsymlinkcreationscript(){
+  if [ ! -f  /usr/local/sbin/asus-fan-create-symlinks.sh ]; then
+    run_sudo_command cp misc/asus-fan-create-symlinks.sh /usr/local/sbin/
+  fi
 }
 function buildmodule(){
   echo -e "${yellow}>>>> ${NC}Now building the asus_fan module."
@@ -102,7 +109,7 @@ function finished(){
 checkforasusfanmodule
 [ $wasmoduleloadewithdkms = 0 ] && removeasusfandkms
 downloadandunpack
-
+installsymlinkcreationscript
 [ $wasmoduleloadedmanually = 0 ] && renamemanuallyinstalledmodule
 buildmodule
 addtoetcmodules
