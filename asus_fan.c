@@ -408,25 +408,25 @@ static int __fan_rpm(int fan) {
 }
 static ssize_t fan_rpm(struct device *dev, struct device_attribute *attr,
                        char *buf) {
-  return sprintf(buf, "%d", __fan_rpm(0));
+  return sprintf(buf, "%d\n", __fan_rpm(0));
 }
 static ssize_t fan_rpm_gfx(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d", __fan_rpm(1));
+  return sprintf(buf, "%d\n", __fan_rpm(1));
 }
 
 static ssize_t fan_get_cur_state(struct device *dev,
                                  struct device_attribute *attr, char *buf) {
   unsigned long state = 0;
   __fan_get_cur_state(0, &state);
-  return sprintf(buf, "%lu", state);
+  return sprintf(buf, "%lu\n", state);
 }
 
 static ssize_t fan_get_cur_state_gfx(struct device *dev,
                                      struct device_attribute *attr, char *buf) {
   unsigned long state = 0;
   __fan_get_cur_state(1, &state);
-  return sprintf(buf, "%lu", state);
+  return sprintf(buf, "%lu\n", state);
 }
 
 static ssize_t fan_set_cur_state_gfx(struct device *dev,
@@ -452,7 +452,7 @@ static ssize_t fan_get_cur_control_state(struct device *dev,
                                          char *buf) {
   int state = 0;
   __fan_get_cur_control_state(0, &state);
-  return sprintf(buf, "%d", state);
+  return sprintf(buf, "%d\n", state);
 }
 
 static ssize_t fan_get_cur_control_state_gfx(struct device *dev,
@@ -460,7 +460,7 @@ static ssize_t fan_get_cur_control_state_gfx(struct device *dev,
                                              char *buf) {
   int state = 0;
   __fan_get_cur_control_state(1, &state);
-  return sprintf(buf, "%d", state);
+  return sprintf(buf, "%d\n", state);
 }
 
 static ssize_t fan_set_cur_control_state_gfx(struct device *dev,
@@ -597,22 +597,22 @@ static int fan_set_auto() {
 
 static ssize_t fan_label(struct device *dev, struct device_attribute *attr,
                          char *buf) {
-  return sprintf(buf, "%s", fan_desc);
+  return sprintf(buf, "%s\n", fan_desc);
 }
 
 static ssize_t fan_label_gfx(struct device *dev, struct device_attribute *attr,
                              char *buf) {
-  return sprintf(buf, "%s", gfx_fan_desc);
+  return sprintf(buf, "%s\n", gfx_fan_desc);
 }
 
 static ssize_t fan_min(struct device *dev, struct device_attribute *attr,
                        char *buf) {
-  return sprintf(buf, "%d", fan_minimum);
+  return sprintf(buf, "%d\n", fan_minimum);
 }
 
 static ssize_t fan_min_gfx(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d", fan_minimum_gfx);
+  return sprintf(buf, "%d\n", fan_minimum_gfx);
 }
 
 static ssize_t set_max_speed(struct device *dev, struct device_attribute *attr,
@@ -631,7 +631,7 @@ static ssize_t get_max_speed(struct device *dev, struct device_attribute *attr,
                              char *buf) {
   unsigned long state = 0;
   fan_get_max_speed(&state);
-  return sprintf(buf, "%lu", state);
+  return sprintf(buf, "%lu\n", state);
 }
 
 static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
@@ -649,7 +649,7 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
 
     // try fixing arbitrary '%' in temp output
-    size = sprintf((char*) &tmp, "%llu", value*1000);
+    size = sprintf((char*) &tmp, "%llu\n", value*1000);
     for(i=0; i<size; i++) {
       if (tmp[i] != '%') {
         buf[to_i] = tmp[i];
@@ -662,12 +662,12 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
 
 static ssize_t temp1_label(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%s", TEMP1_LABEL);
+  return sprintf(buf, "%s\n", TEMP1_LABEL);
 }
 
 static ssize_t temp1_crit(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d", TEMP1_CRIT);
+  return sprintf(buf, "%d\n", TEMP1_CRIT);
 }
 
 
