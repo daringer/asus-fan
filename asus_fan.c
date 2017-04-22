@@ -842,8 +842,8 @@ static int __init fan_init(void) {
   int rpm;
 
   dbg_msg("starting initialization...");
-  dbg_msg("dmi sys info: '%s'", dmi_get_system_info(DMI_SYS_VENDOR));
-  dbg_msg("dmi product name: '%s'", dmi_get_system_info(DMI_PRODUCT_NAME));
+  info_msg("init", "dmi sys info: '%s'", dmi_get_system_info(DMI_SYS_VENDOR));
+  info_msg("init", "dmi product name: '%s'", dmi_get_system_info(DMI_PRODUCT_NAME));
   dbg_msg("dmi chassis type: '%s'", dmi_get_system_info(DMI_CHASSIS_TYPE));
 
   // load without identification
