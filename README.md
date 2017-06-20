@@ -154,7 +154,7 @@ modprobe asus_fan
 ```bash
 echo 123 > ${fpath}/pwmX   # set to 123
 echo 0 > ${fpath}/pwmX     # switch fan off (DANGEROUS!)
-echo 255 >= ${fpath}/pwmX   # set to max speed
+echo 255 > ${fpath}/pwmX   # set to max speed
 ```
 - **ATTENTION** - the fan is now in manual mode - do not burn your machine!
 - **Set Auto-Fan(s)**: to reactivate the automatic fan control write "0" to ```pwmX_enable```:
