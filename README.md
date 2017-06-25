@@ -28,7 +28,7 @@ UX32A      | NX500
 UX301LA    | UX32LN
 UX302LA    | UX303LB
 N551JK     | N552VX
-N56JN      |
+N56JN      |
 
 ## Installation with DKMS
 Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
@@ -37,16 +37,17 @@ Installing the asus-fan kernel module with DKMS means that when you upgrade to a
 
 More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community/DKMS)
 
-Scripted Ubuntu DKMS Setup for Asus Fan Module
---------------------
+### Ubuntu
+#### Scripted Ubuntu DKMS Setup for Asus Fan Module
+
 * Download the `ubuntu_dkms_sudo_install.sh` script from the `misc` folder of this repository. (ie. right-click over **Raw** > select **Save link as...**)
 * Make sure the script is executable (ie. `chmod +x ubuntu_dkms_sudo_install.sh`)
 * Run the script (ie. `./ubuntu_dkms_sudo_install.sh`)
 * The script will need super user powers and will ask you to enter your password to get sudo permissions
 * Check that the module has been built and installed with `lsmod | grep asus_fan`. If you get something lik **asus_fan               14880  0** you are good. If you get nothing the module is not loaded.
 
-<a name="ubuntu-symlink">Ubuntu - Symlink Creation on reboot</a>
----------------------
+#### <a name="ubuntu-symlink">Ubuntu - Symlink Creation on reboot</a>
+
 Symlinks will need to be created each time. The `asus-fan-create-symlinks.sh` is designed for this purpose, however it must be run after each reboot to create these links.
 
 If you used the `ubuntu_dkms_sudo_install.sh` installation script above the `asus-fan-ubuntu-create-symlinks.sh` will have been installed at `/usr/local/sbin/asus-fan-create-symlinks.sh`.
@@ -78,45 +79,10 @@ stop on stopping dbus
 # don't respawn on error
 #
 normal exit 1
-
-### ArchLinux
-Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the [install script](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install) and run ``makepkg``:
-    
-    cd /tmp
-    mkdir asus-fan-build 
-    cd asus-fan-build 
-    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
-    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install 
-    makepkg
-    sudo pacman -U asus-fan-dkms-git-*.pkg.tar.xz
-
-### Ubuntu
-As the superuser (root):
-
-respawn
-
-#
-# consider something wrong if respawned 10 times in 1 minute
-#
-respawn limit 10 60
-
-pre-start script
-if [ ! -d  /tmp/asus-fan-shm ]; then
-/usr/local/sbin/asus-fan-create-symlinks.sh
-echo " * creating symlinks ..."
-fi
-end script
-
-exec thermald --no-daemon --dbus-enable
 ```
 
-Troubleshooting Symlinks
----------------------
-Runing `ls -l /tmp/asus-fan-shm/` will list the sysmlinks created. If it looks like you are missing some (this depends on the Asus laptop you have as to how many and which ones you will have) you can run `sudo asus-fan-create-symlinks.sh`. This will delete the links in the folder and recreate them. A number of them are only created if they are readable.
+#### Manual Ubuntu DKMS Setup for Asus Fan Module
 
-
-Manual Ubuntu DKMS Setup for Asus Fan Module
----------------------
 ``` bash
 cd /usr/src
 sudo wget -o asus-fan-master.tar.gz  https://github.com/daringer/asus-fan/archive/master.tar.gz
@@ -124,7 +90,7 @@ sudo mkdir asus_fan-master
 cd asus_fan-master
 sudo tar xpvf ../asus_fan.tar.gz --strip-components=1
 sudo  tar xpvf ../asus_fan.tar.gz --strip-component
-sudo  mv dkms.conf dkms.conf.archlinux
+sudo  mv dkms.conf dkms.conf.archlinu
 sudo mv dkms-ubuntu.conf dkms.conf
 cd ..
 sudo dkms add -m asus_fan -v master
@@ -135,8 +101,28 @@ sudo cp misc/asus-fan-create-symlinks.sh /usr/local/sbin/asus-fan-create-symlink
 
 For Ubuntu 14.04 you will also need to add the lines mention above in the **[Ubuntu - Symlink Creation on reboot](#ubuntu-symlink)** section to  `/etc/init/thermald.conf` so that symlinks get created at each reboot by the Upstart init system. Newer versions of Ubuntu use the Systemd init system and not Upstart.
 
-Quickstart - Manual installation
-----------
+
+### ArchLinux
+Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/PKGBUILD) and the [install script](https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install) and run ``makepkg``:
+```bash
+    cd /tmp
+    mkdir asus-fan-build 
+    cd asus-fan-build 
+    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
+    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install 
+    makepkg
+    sudo pacman -U asus-fan-dkms-git-*.pkg.tar.xz
+```
+Or simply use the [AUR](https://aur.archlinux.org) [package](https://aur.archlinux.org/packages/asus-fan-dkms-git/) and your fav. AUR tooling...
+
+
+## Troubleshooting Symlinks
+
+
+Runing `ls -l /tmp/asus-fan-shm/` will list the sysmlinks created. If it looks like you are missing some (this depends on the Asus laptop you have as to how many and which ones you will have) you can run `sudo asus-fan-create-symlinks.sh`. This will delete the links in the folder and recreate them. A number of them are only created if they are readable.
+
+
+## <a name="quickstart">Quickstart - Manual installation</a>
 
 - **Build** - just run ```make``` inside the directory
 - **Install** - run ```sudo make install``` inside the directory
