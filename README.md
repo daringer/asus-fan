@@ -146,7 +146,7 @@ modprobe asus_fan
 ```
 - **Interface** - the fan(s) is/are exposed as ```hwmon```, thus available in:
 ```bash
-/sys/class/hwmon/hwmonX
+fpath="/sys/class/hwmon/hwmonX"
 ```
 - **Monitor Fan speed** - simply use [xsensors](http://www.linuxhardware.org/xsensors/) or [psensors](http://wpitchoune.net/psensor/) for graphical, or [sensors](http://www.lm-sensors.org/) for console monitoring. My personal preference is [conky](https://github.com/brndnmtthws/conky)---there are alot [linux system monitors](https://lmgtfy.com/?q=linux+system+monitor).
 
