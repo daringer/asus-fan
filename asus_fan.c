@@ -638,26 +638,16 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
                            char *buf) {
     acpi_status ret;
     unsigned long long int value;
-    char tmp[10];
-    ssize_t to_i = 0;
-    ssize_t i = 0;
     ssize_t size = 0;
 
     dbg_msg("temp-id: 1 | get (acpi eval)"); 
 
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
+    
+    size = sprintf((char*) &buf, "%llu\n", value);
 
-    // try fixing arbitrary '%' in temp output
-    size = sprintf((char*) &tmp, "%llu\n", value*1000);
-    for(i=0; i<size; i++) {
-      if (tmp[i] != '%') {
-        buf[to_i] = tmp[i];
-        to_i++;
-      }
-    }
-    buf[to_i]='\0';
-    return (to_i + 1);
+    return size;
 }
 
 static ssize_t temp1_label(struct device *dev, struct device_attribute *attr,
