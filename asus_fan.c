@@ -80,37 +80,50 @@ struct asus_fan {
 
   struct asus_fan_driver *driver;
   struct asus_fan_driver *driver_gfx;
+
+  struct device *hwmon_dev;
+};
+
+struct asus_fan_data {
+  struct asus_fan *asus_fan_obj;
+
+  // 'fan_states' save last (manually) set fan state/speed
+  int fan_states[2];
+  // 'fan_manual_mode' keeps whether this fan is manually controlled
+  bool fan_manual_mode[2];
+  // 'true' - if second fan is available
+  bool has_gfx_fan;
+  // max fan speed default
+  int max_fan_speed_default;
+  // ... user-defined max value
+  int max_fan_speed_setting;
+  // minimum allowed (set) speed for fan(s)
+  int fan_minimum;
+  // this speed will be reported as the minimal speed for the fans
+  int fan_minimum_gfx;
+  // regular fan name
+  const char *fan_desc;
+  // gfx-card fan name
+  const char *gfx_fan_desc; 
+
 };
 
 //////
 ////// GLOBALS
 //////
 
-// 'fan_states' save last (manually) set fan state/speed
-static int fan_states[2] = {-1, -1};
-// 'fan_manual_mode' keeps whether this fan is manually controlled
-static bool fan_manual_mode[2] = {false, false};
-
-// 'true' - if current system was identified and thus a second fan is available
-static bool has_gfx_fan;
+static struct asus_fan_data asus_data = {
+  NULL,
+  {-1,    -1},
+  {false, false}, 
+  false,
+  255, 255, 10, 10,
+  "CPU Fan", 
+  "GFX Fan"
+};
 
 // params struct used frequently for acpi-call-construction
 static struct acpi_object_list params;
-
-// max fan speed default
-static int max_fan_speed_default = 255;
-// ... user-defined max value
-static int max_fan_speed_setting = 255;
-
-//// fan "name"
-// regular fan name
-static char *fan_desc = "CPU Fan";
-// gfx-card fan name
-static char *gfx_fan_desc = "GFX Fan";
-
-// this speed will be reported as the minimal speed for the fans
-static int fan_minimum = 10;
-static int fan_minimum_gfx = 10;
 
 // force loading i.e., skip device existance check 
 static short force_load = false;
@@ -295,8 +308,8 @@ RPMs	PWM
   
   dbg_msg("fan-id: %d | get RPM", fan);
 
-  if (fan_manual_mode[fan]) {
-    *state = fan_states[fan];
+  if (asus_data.fan_manual_mode[fan]) {
+    *state = asus_data.fan_states[fan];
   } else {
     if (rpm == 0) {
       *state = 0;
@@ -320,14 +333,14 @@ static int __fan_set_cur_state(int fan, unsigned long state) {
     return 1;
   }
 
-  fan_states[fan] = state;
-  fan_manual_mode[fan] = true;
+  asus_data.fan_states[fan] = state;
+  asus_data.fan_manual_mode[fan] = true;
   return fan_set_speed(fan, state);
 }
 
 static int __fan_get_cur_control_state(int fan, int *state) {
   dbg_msg("fan-id: %d | get control state", fan);
-  *state = fan_manual_mode[fan];
+  *state = asus_data.fan_manual_mode[fan];
   return 0;
 }
 
@@ -340,7 +353,6 @@ static int __fan_set_cur_control_state(int fan, int state) {
 }
 
 static int fan_set_speed(int fan, int speed) {
-  // struct acpi_object_list params;
   union acpi_object args[2];
   unsigned long long value;
   
@@ -375,9 +387,9 @@ static int __fan_rpm(int fan) {
   dbg_msg("fan-id: %d | get RPM", fan);
 
   // fan does not report during manual speed setting - so fake it!
-  if (fan_manual_mode[fan]) {
-    value = fan_states[fan] * fan_states[fan] * 1000 / -16054 +
-            fan_states[fan] * 32648 / 1000 - 365;
+  if (asus_data.fan_manual_mode[fan]) {
+    value = asus_data.fan_states[fan] * asus_data.fan_states[fan] * 1000 / -16054 +
+            asus_data.fan_states[fan] * 32648 / 1000 - 365;
 
     dbg_msg("|--> get RPM for manual mode, calculated: %d", value); 
 
@@ -487,7 +499,7 @@ static ssize_t fan_set_cur_control_state(struct device *dev,
 static int fan_get_max_speed(unsigned long *state) {
 
   dbg_msg("fan-id: (both) | get max speed");
-  *state = max_fan_speed_setting;
+  *state = asus_data.max_fan_speed_setting;
   return 0;
 }
 
@@ -550,7 +562,7 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
   }
 
   // keep set max fan speed for the get_max
-  max_fan_speed_setting = state;
+  asus_data.max_fan_speed_setting = state;
 
   return ret;
 }
@@ -563,11 +575,11 @@ static int fan_set_auto() {
   dbg_msg("fan-id: (both) | set to automatic mode");
 
   // setting (both) to auto-mode simultanously
-  fan_manual_mode[0] = false;
-  fan_states[0] = -1;
-  if (has_gfx_fan) {
-    fan_states[1] = -1;
-    fan_manual_mode[1] = false;
+  asus_data.fan_manual_mode[0] = false;
+  asus_data.fan_states[0] = -1;
+  if (asus_data.has_gfx_fan) {
+    asus_data.fan_states[1] = -1;
+    asus_data.fan_manual_mode[1] = false;
   }
 
   // acpi call to call auto-mode for all fans!
@@ -581,8 +593,7 @@ static int fan_set_auto() {
   args[1].integer.value = 0;
 
   // acpi call
-  ret =
-      acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
+  ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
   if (ret != AE_OK) {
     err_msg("set_auto",
              "failed reseting fan(s) to auto-mode! "
@@ -591,28 +602,27 @@ static int fan_set_auto() {
 
     return ret;
   }
-
   return ret;
 }
 
 static ssize_t fan_label(struct device *dev, struct device_attribute *attr,
                          char *buf) {
-  return sprintf(buf, "%s\n", fan_desc);
+  return sprintf(buf, "%s\n", asus_data.fan_desc);
 }
 
 static ssize_t fan_label_gfx(struct device *dev, struct device_attribute *attr,
                              char *buf) {
-  return sprintf(buf, "%s\n", gfx_fan_desc);
+  return sprintf(buf, "%s\n", asus_data.gfx_fan_desc);
 }
 
 static ssize_t fan_min(struct device *dev, struct device_attribute *attr,
                        char *buf) {
-  return sprintf(buf, "%d\n", fan_minimum);
+  return sprintf(buf, "%d\n", asus_data.fan_minimum);
 }
 
 static ssize_t fan_min_gfx(struct device *dev, struct device_attribute *attr,
                            char *buf) {
-  return sprintf(buf, "%d\n", fan_minimum_gfx);
+  return sprintf(buf, "%d\n", asus_data.fan_minimum_gfx);
 }
 
 static ssize_t set_max_speed(struct device *dev, struct device_attribute *attr,
@@ -732,24 +742,23 @@ static struct attribute_group hwmon_gfx_attribute_group = {
 __ATTRIBUTE_GROUPS(hwmon_gfx_attribute);
 
 static int asus_fan_hwmon_init(struct asus_fan *asus) {
-  struct device *hwmon;
-
+  
   dbg_msg("init hwmon device");
 
-  if (!has_gfx_fan) {
-    hwmon = hwmon_device_register_with_groups(
+  if (!asus_data.has_gfx_fan) {
+    asus->hwmon_dev = hwmon_device_register_with_groups(
         &asus->platform_device->dev, "asus_fan", asus, hwmon_attribute_groups);
-    if (IS_ERR(hwmon)) {
+    if (IS_ERR(asus->hwmon_dev)) {
       err_msg("init", "could not register asus hwmon device");
-      return PTR_ERR(hwmon);
+      return PTR_ERR(asus->hwmon_dev);
     }
   } else {
-    hwmon = hwmon_device_register_with_groups(&asus->platform_device->dev,
-                                              "asus_fan", asus,
-                                              hwmon_gfx_attribute_groups);
-    if (IS_ERR(hwmon)) {
+    asus->hwmon_dev = hwmon_device_register_with_groups(
+        &asus->platform_device->dev, "asus_fan", asus, hwmon_gfx_attribute_groups);
+
+    if (IS_ERR(asus->hwmon_dev)) {
       err_msg("init", "could not register asus hwmon device");
-      return PTR_ERR(hwmon);
+      return PTR_ERR(asus->hwmon_dev);
     }
   }
   return 0;
@@ -774,7 +783,12 @@ static int asus_fan_probe(struct platform_device *pdev) {
     return -ENOMEM;
 
   asus->driver = wdrv;
+  asus->hwmon_dev = NULL;
   asus->platform_device = pdev;
+
+  // set asus-dev as member into global data struct
+  asus_data.asus_fan_obj = asus;
+
   wdrv->platform_device = pdev;
   platform_set_drvdata(asus->platform_device, asus);
 
@@ -784,6 +798,8 @@ static int asus_fan_probe(struct platform_device *pdev) {
   err = asus_fan_hwmon_init(asus);
   if (err)
     goto fail_hwmon;
+
+
   return 0;
 
 fail_hwmon:
@@ -833,12 +849,12 @@ static int __init fan_init(void) {
 
   dbg_msg("starting initialization...");
   info_msg("init", "dmi sys info: '%s'", dmi_get_system_info(DMI_SYS_VENDOR));
-  info_msg("init", "dmi product name: '%s'", dmi_get_system_info(DMI_PRODUCT_NAME));
+  info_msg("init", "dmi product: '%s'", dmi_get_system_info(DMI_PRODUCT_NAME));
   dbg_msg("dmi chassis type: '%s'", dmi_get_system_info(DMI_CHASSIS_TYPE));
 
   // load without identification
   if (force_load) {
-    has_gfx_fan = true;
+    asus_data.has_gfx_fan = true;
     info_msg("init", "forced loading of module: USE WITH CARE");
 
   // identify system/model/platform
@@ -854,18 +870,18 @@ static int __init fan_init(void) {
     // try to get RPM for second fan, indicates if it is available
     rpm = __fan_rpm(1);
     if (rpm == -1)
-      has_gfx_fan = false;
+      asus_data.has_gfx_fan = false;
     else
-      has_gfx_fan = true;
+      asus_data.has_gfx_fan = true;
 
     dbg_msg("__fan_rpm() calls succeeded, found %d fan(s)",
-            (unsigned int)has_gfx_fan + 1);
+            (unsigned int)asus_data.has_gfx_fan + 1);
 
     // check if reseting fan speeds works
-    ret = fan_set_max_speed(max_fan_speed_default, false);
+    ret = fan_set_max_speed(asus_data.max_fan_speed_default, false);
     if (ret != AE_OK) {
       err_msg("init", "set max speed to: '%d' failed! errcode: %d",
-               max_fan_speed_default, ret);
+               asus_data.max_fan_speed_default, ret);
       return -ENODEV;
     }
 
@@ -884,12 +900,14 @@ static int __init fan_init(void) {
   ret = asus_fan_register_driver(&asus_fan_driver);
   if (ret != AE_OK) {
     err_msg("init", "set max speed to: '%d' failed! errcode: %d",
-             max_fan_speed_default, ret);
+             asus_data.max_fan_speed_default, ret);
     return ret;
   }
-  info_msg("init", "finished init, found %d fan(s) to control",
-           (unsigned int)has_gfx_fan + 1);
 
+  info_msg("init", "created hwmon device: %s",
+           dev_name(asus_data.asus_fan_obj->hwmon_dev));
+  info_msg("init", "finished init, found %d fan(s) to control",
+           (unsigned int)asus_data.has_gfx_fan + 1);
   return 0;
 }
 
