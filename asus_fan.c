@@ -91,6 +91,8 @@ struct asus_fan_data {
   int fan_states[2];
   // 'fan_manual_mode' keeps whether this fan is manually controlled
   bool fan_manual_mode[2];
+	// 'true' - if first fan is available
+	bool has_fan;
   // 'true' - if second fan is available
   bool has_gfx_fan;
   // max fan speed default
@@ -116,7 +118,7 @@ static struct asus_fan_data asus_data = {
   NULL,
   {-1,    -1},
   {false, false}, 
-  false,
+	false, false,
   255, 255, 10, 10,
   "CPU Fan", 
   "GFX Fan"
@@ -654,9 +656,11 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
 
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
-    
+    if (ret != AE_OK) {
+ 			err_msg("read_temp", "failed reading temperature, errcode: %d", ret);
+    	return ret;
+  	}
     size = sprintf((char*) &buf, "%llu\n", value);
-
     return size;
 }
 
@@ -697,6 +701,7 @@ static DEVICE_ATTR(temp1_input, S_IRUGO, temp1_input, NULL);
 static DEVICE_ATTR(temp1_label, S_IRUGO, temp1_label, NULL);
 static DEVICE_ATTR(temp1_crit, S_IRUGO, temp1_crit, NULL);
 
+/*
 // hwmon attributes without second fan
 static struct attribute *hwmon_attributes[] = {
     &dev_attr_pwm1.attr,           &dev_attr_pwm1_enable.attr,
@@ -726,6 +731,16 @@ static struct attribute *hwmon_gfx_attributes[] = {
     &dev_attr_temp1_label.attr,
     &dev_attr_temp1_crit.attr,
     NULL};
+*/
+static struct attribute *hwmon_attrs[] = {
+	NULL, NULL, NULL, NULL, NULL, 
+	NULL,
+	NULL, NULL, NULL, NULL, NULL, 
+	NULL, NULL, NULL, 
+	
+	NULL};
+
+
 
 // by now sysfs is always visible
 static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
@@ -733,18 +748,24 @@ static umode_t asus_hwmon_sysfs_is_visible(struct kobject *kobj,
 	return attr->mode;
 }
 
-static struct attribute_group hwmon_attribute_group = {
+/*static struct attribute_group hwmon_attribute_group = {
     .is_visible = asus_hwmon_sysfs_is_visible, .attrs = hwmon_attributes};
 __ATTRIBUTE_GROUPS(hwmon_attribute);
 
 static struct attribute_group hwmon_gfx_attribute_group = {
     .is_visible = asus_hwmon_sysfs_is_visible, .attrs = hwmon_gfx_attributes};
 __ATTRIBUTE_GROUPS(hwmon_gfx_attribute);
+*/ 
+
+static struct attribute_group hwmon_attr_group = {
+    .is_visible = asus_hwmon_sysfs_is_visible, .attrs = hwmon_attrs};
+// will create hwmon_attr_groups (?)
+__ATTRIBUTE_GROUPS(hwmon_attr);
 
 static int asus_fan_hwmon_init(struct asus_fan *asus) {
   
   dbg_msg("init hwmon device");
-
+  /*
   if (!asus_data.has_gfx_fan) {
     asus->hwmon_dev = hwmon_device_register_with_groups(
         &asus->platform_device->dev, "asus_fan", asus, hwmon_attribute_groups);
@@ -760,7 +781,16 @@ static int asus_fan_hwmon_init(struct asus_fan *asus) {
       err_msg("init", "could not register asus hwmon device");
       return PTR_ERR(asus->hwmon_dev);
     }
-  }
+  }*/
+
+  asus->hwmon_dev = hwmon_device_register_with_groups(
+				&asus->platform_device->dev, "asus_fan", asus, hwmon_attr_groups);
+
+	if(IS_ERR(asus->hwmon_dev)) {
+		err_msg("init", "could not register asus hwmon device");
+		return PTR_ERR(asus->hwmon_dev);
+	}
+
   return 0;
 }
 
@@ -860,22 +890,101 @@ static int __init fan_init(void) {
   // identify system/model/platform
   } else if (!strcmp(dmi_get_system_info(DMI_SYS_VENDOR), "ASUSTeK COMPUTER INC.")) {
 
-    // try to get RPM for first fan 
+		
+		// step by step probe available functionalities and insert into attrib grp 
+	  /*  ---- &dev_attr_pwm1.attr,           &dev_attr_pwm1_enable.attr,
+    &dev_attr_fan1_min.attr,       &dev_attr_fan1_input.attr,
+    &dev_attr_fan1_label.attr,
+
+    &dev_attr_fan1_speed_max.attr,
+    
+		&dev_attr_pwm2.attr,           &dev_attr_pwm2_enable.attr,
+    &dev_attr_fan2_min.attr,       &dev_attr_fan2_input.attr,
+    &dev_attr_fan2_label.attr,     
+
+    &dev_attr_temp1_input.attr,
+    &dev_attr_temp1_label.attr,
+    &dev_attr_temp1_crit.attr,
+		
+		// Makros defining all possible hwmon attributes
+static DEVICE_ATTR(pwm1, S_IWUSR | S_IRUGO, fan_get_cur_state,
+                   fan_set_cur_state);
+static DEVICE_ATTR(pwm1_enable, S_IWUSR | S_IRUGO, fan_get_cur_control_state,
+                   fan_set_cur_control_state);
+static DEVICE_ATTR(fan1_min, S_IRUGO, fan_min, NULL);
+static DEVICE_ATTR(fan1_input, S_IRUGO, fan_rpm, NULL);
+static DEVICE_ATTR(fan1_label, S_IRUGO, fan_label, NULL);
+
+static DEVICE_ATTR(fan1_speed_max, S_IWUSR | S_IRUGO, get_max_speed,
+                   set_max_speed);
+
+static DEVICE_ATTR(pwm2, S_IWUSR | S_IRUGO, fan_get_cur_state_gfx,
+                   fan_set_cur_state_gfx);
+static DEVICE_ATTR(pwm2_enable, S_IWUSR | S_IRUGO,
+                   fan_get_cur_control_state_gfx,
+                   fan_set_cur_control_state_gfx);
+static DEVICE_ATTR(fan2_min, S_IRUGO, fan_min_gfx, NULL);
+static DEVICE_ATTR(fan2_input, S_IRUGO, fan_rpm_gfx, NULL);
+static DEVICE_ATTR(fan2_label, S_IRUGO, fan_label_gfx, NULL);
+
+static DEVICE_ATTR(temp1_input, S_IRUGO, temp1_input, NULL);
+static DEVICE_ATTR(temp1_label, S_IRUGO, temp1_label, NULL);
+static DEVICE_ATTR(temp1_crit, S_IRUGO, temp1_crit, NULL);
+
+
+		
+		*/ 
+
+		size_t temp = AE_OK;
+		// USE this for idx in hwmon_attrs size_t idx = 0;
+		// try to get RPM for first fan 
     rpm = __fan_rpm(0);
     if (rpm == -1) {
-      err_msg("init", "fan-id: 1 | failed to get testdata, no device exists?"); 
-      return -ENODEV;
-    }
-
-    // try to get RPM for second fan, indicates if it is available
+			asus_data.has_fan = false;
+      err_msg("init", "fan-id: 1 | failed to get rpm"); 
+		} else {
+			asus_data.has_fan = true;
+			info_msg("init", "fan-id: 1 | success getting rpm");
+			hwmon_attrs[0] = &dev_attr_pwm1.attr;
+			hwmon_attrs[1] = &dev_attr_pwm1_enable.attr;
+			hwmon_attrs[2] = &dev_attr_fan1_min.attr;
+			hwmon_attrs[3] = &dev_attr_fan1_input.attr;
+			hwmon_attrs[5] = &dev_attr_fan1_speed_max.attr;
+		}
+    // try to get RPM for second fan
     rpm = __fan_rpm(1);
-    if (rpm == -1)
+    if (rpm == -1) {
+      err_msg("init", "fan-id: 2 | failed to get rpm"); 
       asus_data.has_gfx_fan = false;
-    else
+		} else {
+			info_msg("init", "fan-id: 2 | success getting rpm");
       asus_data.has_gfx_fan = true;
+			hwmon_attrs[6] = &dev_attr_pwm2.attr;
+			hwmon_attrs[7] = &dev_attr_pwm2_enable.attr;
+			hwmon_attrs[8] = &dev_attr_fan2_min.attr;
+			hwmon_attrs[9] = &dev_attr_fan2_input.attr;
+	  }
 
-    dbg_msg("__fan_rpm() calls succeeded, found %d fan(s)",
-            (unsigned int)asus_data.has_gfx_fan + 1);
+		// try to read temprature
+		//size_t temp = temp1_input(asus_data.hwmon_dev, );
+		if (temp != AE_OK) {
+			err_msg("init", "temperature read probe failed");
+		} else {
+			info_msg("init", "temp-id: 1 | success getting temp");
+			hwmon_attrs[11] = &dev_attr_temp1_input.attr;
+			hwmon_attrs[12] = &dev_attr_temp1_label.attr;
+			hwmon_attrs[13] = &dev_attr_temp1_crit.attr;
+		}
+
+    // set labels for existing fans 
+		if (asus_data.has_fan) 
+			hwmon_attrs[4] = &dev_attr_fan1_label.attr;
+    if (asus_data.has_gfx_fan)
+			hwmon_attrs[10] = &dev_attr_fan2_label.attr;
+
+
+    /*dbg_msg("__fan_rpm() calls succeeded, found %d fan(s)",
+            (unsigned int)asus_data.has_gfx_fan + 1);*/
 
     // check if reseting fan speeds works
     ret = fan_set_max_speed(asus_data.max_fan_speed_default, false);
