@@ -19,3 +19,8 @@ install:
 
 clean:
 	make -C $(KDIR) M=$$PWD clean
+
+removeloadmodule: all
+	sudo rmmod asus-fan || true
+	sudo insmod asus_fan.ko
+	sudo systemctl restart asus-fan.service
