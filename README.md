@@ -159,6 +159,7 @@ echo 0 > ${fpath}/pwmX_enable   # reset to auto-mode (always for all fans)
 - [asusfanctrld](https://github.com/nflx/asusfanctrld) userland (bash) application, acpi_call  based, only UX32VD, second fan support?, no (standard) interface exposed
 - [asus_ux32v_fan_control](https://github.com/chrischdi/asus_ux32v_fan_control) is actually a fork of this project undergone a renaming (hmm), very old state, no hwmon (interface) support, thermal_device interface, most likely as buggy as this project was one year ago
 - [asus_wmi](https://github.com/KastB/asus_wmi) realization as a part of the exisiting `asus_wmi` module, which is maybe the only way to submit it for the upstream kernel, nevertheless support for the second fan is not available through wmi. Sister project, closely related to the one shown here.
+- [NBFC](https://github.com/hirschmann/nbfc) *NotebookFanControl* provides---despite others---support for various ASUS Zenbook models, written in C#, cross-platform, user-land only. Convinient and easy to use, but might be a little too much overhead in order to manage a hw-fan, but that's a matter of preference for sure.
 
 So this [project](https://github.com/daringer/asus-fan) distinguishes itself from the others by providing a **hwmon standard state-of-art interface** with a wide variety of **supported zenbook models** realized as a **kernelspace driver**. Guess you found the *right* one ;)
 
