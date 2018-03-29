@@ -18,17 +18,19 @@ ASUS (Zenbook) fan(s) control and monitor kernel module.
 ## Compatibilty
 The following Notebooks should be supported - be aware that it's still not in production state
 
-Single Fan | Two Fans (NVIDIA)
------------|-------------------
-UX21E      | UX32VD
-UX31E      | UX42VS
-UX21A      | UX52VS
-UX31A      | U500VZ
-UX32A      | NX500
-UX301LA    | UX32LN
-UX302LA    | UX303LB
-N551JK     | N552VX
-N56JN      | N550JV
+Single Fan | Two Fans (NVIDIA)  | Limited or no support^{1}
+-----------|--------------------|--------------------------
+UX21E      | UX32VD             | UX3300UAR
+UX31E      | UX42VS             | UX3410UA
+UX21A      | UX52VS             | Zenbook 3U
+UX31A      | U500VZ             |
+UX32A      | NX500              | 
+UX301LA    | UX32LN             |
+UX302LA    | UX303LB            |
+N551JK     | N552VX             |
+N56JN      | N550JV             |
+
+^{1}: see issues #55 + #57
 
 ## Installation with DKMS
 Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
