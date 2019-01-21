@@ -194,7 +194,6 @@ Nevertheless that script did it worse for me than the original controller - thus
 ## TODOs:
 - do a code review and clean it up
 - check with more models
-- add an included fan controller
 - ~~submit an upstream patch - any howtos?? wtf, write acpi-devel kernel-mailinglist ??~~
 
 
