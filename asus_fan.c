@@ -85,6 +85,12 @@ struct asus_fan {
   struct device *hwmon_dev;
 };
 
+typedef enum {
+	ASUS_FAN_HW_DEFAULT  = 0,
+	ASUS_FAN_HW_UX410UAK = 1
+
+} ASUS_FAN_HW_VARIANT;
+
 struct asus_fan_data {
   struct asus_fan *asus_fan_obj;
 
@@ -108,11 +114,14 @@ struct asus_fan_data {
   const char *fan_desc;
   // gfx-card fan name
   const char *gfx_fan_desc;
+	// zenbook hardware variant (dmi product) group
+	ASUS_FAN_HW_VARIANT variant;
 };
 
 //////
 ////// GLOBALS
 //////
+
 
 static struct asus_fan_data asus_data = {
     NULL, 
@@ -121,7 +130,9 @@ static struct asus_fan_data asus_data = {
 		false, false, 
 		255, 255,
     10, 10,       
-		"CPU Fan", "GFX Fan"};
+		"CPU Fan", "GFX Fan",
+		ASUS_FAN_HW_DEFAULT
+};
 
 const static char* fan_mode_manual_string = "manual";
 const static char* fan_mode_auto_string = "auto";
