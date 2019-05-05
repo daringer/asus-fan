@@ -57,7 +57,7 @@ case $linuxdistro in
 esac
 
 # fan interface
-[ -r /pwm1 ] && \
+[ -r ${hwmon_dir}/pwm1 ] && \
 	ln -s ${hwmon_dir}/pwm1 ${d}/fan_cpu_speed
 [ -r ${hwmon_dir}/pwm2 ] && \
 	ln -s ${hwmon_dir}/pwm2 ${d}/fan_gfx_speed
