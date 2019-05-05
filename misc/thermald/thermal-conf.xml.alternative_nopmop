@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- BEGIN -->
+<ThermalConfiguration>
+	<Platform>
+		<Name>ASUS UX32VD</Name>
+		<ProductName>*</ProductName>
+		<Preference>PERFORMANCE</Preference> 
+
+	<ThermalSensors>
+
+		<ThermalSensor>
+			<Type>core1_sens</Type>
+			<Path>/tmp/asus-fan-shm/core1_temp</Path>
+			<AsyncCapable>0</AsyncCapable>
+		</ThermalSensor>
+
+		<ThermalSensor>
+			<Type>core2_sens</Type>
+			<Path>/tmp/asus-fan-shm/core2_temp</Path>
+			<AsyncCapable>0</AsyncCapable>
+		</ThermalSensor>
+
+		<ThermalSensor>
+			<Type>die_sens</Type>
+			<Path>/tmp/asus-fan-shm/die_temp</Path>
+			<AsyncCapable>0</AsyncCapable>
+		</ThermalSensor>
+
+		<ThermalSensor>
+			<Type>tz_sens</Type>
+			<Path>/tmp/asus-fan-shm/tz1_temp</Path>
+			<AsyncCapable>0</AsyncCapable>
+		</ThermalSensor>
+	</ThermalSensors>
+
+	<ThermalZones>
+
+		<ThermalZone>
+			<Type>main</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>die_sens</SensorType>
+					<Temperature>65000</Temperature>
+					<type>passive</type>
+					<ControlType>SEQUENTIAL</ControlType>
+
+					<CoolingDevice>
+						<index>1</index>
+						<influence>20</influence>
+						<type>CPUFan</type>
+						<SamplingPeriod>1</SamplingPeriod>
+					</CoolingDevice>
+					<CoolingDevice>
+						<index>2</index>
+						<influence>10</influence>
+						<type>GFXFan</type>
+						<SamplingPeriod>1</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+
+			</TripPoints>
+		</ThermalZone>
+
+		<ThermalZone>
+			<Type>cpu1</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>core1_sens</SensorType>
+					<Temperature>65000</Temperature>
+					<type>passive</type>
+					<ControlType>SEQUENTIAL</ControlType>
+
+					<CoolingDevice>
+						<index>1</index>
+						<type>CPUFan</type>
+						<SamplingPeriod>1</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+
+			</TripPoints>
+		</ThermalZone>
+
+		<ThermalZone>
+			<Type>cpu2</Type>
+			<TripPoints>
+				<TripPoint>
+					<SensorType>core2_sens</SensorType>
+					<Temperature>65000</Temperature>
+					<type>passive</type>
+					<ControlType>SEQUENTIAL</ControlType>
+
+					<CoolingDevice>
+						<index>1</index>
+						<type>CPUFan</type>
+						<SamplingPeriod>1</SamplingPeriod>
+					</CoolingDevice>
+				</TripPoint>
+
+			</TripPoints>
+		</ThermalZone>
+	</ThermalZones>
+
+	<CoolingDevices>
+		<CoolingDevice>
+			<Type>CPUFan</Type>
+			<Path>/tmp/asus-fan-shm/fan_cpu_speed</Path>
+			<MinState>70</MinState>
+			<IncDecStep>35</IncDecStep>
+			<ReadBack>0</ReadBack>
+			<MaxState>255</MaxState>
+			<DebouncePeriod>1</DebouncePeriod>
+		</CoolingDevice>
+
+		<CoolingDevice>
+			<Type>GFXFan</Type>
+			<Path>/tmp/asus-fan-shm/fan_gfx_speed</Path>
+			<MinState>70</MinState>
+			<IncDecStep>35</IncDecStep>
+			<MaxState>255</MaxState>
+			<ReadBack>0</ReadBack>
+			<DebouncePeriod>2</DebouncePeriod>
+		</CoolingDevice>
+
+	</CoolingDevices>
+</Platform>
+</ThermalConfiguration>
+<!-- END -->
