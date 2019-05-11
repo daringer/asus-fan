@@ -12,6 +12,8 @@
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
 
 #include <linux/acpi.h>
 #include <linux/dmi.h>
@@ -402,8 +404,21 @@ static int fan_set_speed(int fan, int speed) {
   args[1].type = ACPI_TYPE_INTEGER;
   args[1].integer.value = speed;
   // acpi call
-  return acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params,
-                               &value);
+  acpi_status ret;
+  if (asus_data.variant == ASUS_FAN_HW_UX410UAK)
+  {
+	args[0].integer.value = 0x521;
+	args[1].integer.value = 0x35;
+	ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.WRAM", &params, &value);
+	args[0].integer.value = fan;
+	args[1].integer.value = speed;
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST84", &params, &value);
+  }
+  else
+  {
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
+  }
+  return ret;
 }
 
 static int __fan_rpm(int fan) {
@@ -628,8 +643,22 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     args[0].integer.value = state;
 
     // acpi call
-    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST98", &params,
-                                &value);
+  if (asus_data.variant == ASUS_FAN_HW_UX410UAK)
+  {
+union acpi_object args2[2];
+    params.count = ARRAY_SIZE(args2);
+    params.pointer = args2;
+    // pass arg
+    args2[0].type = ACPI_TYPE_INTEGER;
+    args2[0].integer.value = 0x521;
+    args2[1].type = ACPI_TYPE_INTEGER;
+    args2[1].integer.value = 0xc5;
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST84", &params, &value);
+  }
+else
+{
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.ST98", &params, &value);
+}
     if (ret != AE_OK) {
       err_msg("set_max_speed",
               "set max fan speed(s) failed (no reset) errcoded", ret);
@@ -670,8 +699,17 @@ static int fan_set_auto() {
   args[1].integer.value = 0;
 
   // acpi call
-  ret =
-      acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
+  if (asus_data.variant == ASUS_FAN_HW_UX410UAK)
+  {
+	args[0].integer.value = 0x521;
+	args[1].integer.value = 0x85;
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.WRAM", &params, &value);
+  }
+  else
+  {
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.SFNV", &params, &value);
+  }
+  
   if (ret != AE_OK) {
     err_msg("set_auto",
             "failed reseting fan(s) to auto-mode! "
@@ -730,7 +768,15 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
   dbg_msg("temp-id: 1 | get (acpi eval)");
 
   // acpi call
-  ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
+  if (asus_data.variant == ASUS_FAN_HW_UX410UAK)
+  {
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH0R", NULL, &value);
+  }
+  else
+  {
+    ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
+  }
+  
   if (ret != AE_OK) {
     err_msg("read_temp", "failed reading temperature, errcode: %d", ret);
     return ret;
@@ -905,6 +951,87 @@ int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver) {
   return 0;
 }
 
+static struct task_struct *control_task = NULL;
+#define TEMP_MIN 40
+#define SLEEP_INTERVAL_MS 1000
+#define TURN_OFF_AFTER_MS SLEEP_INTERVAL_MS*3
+
+static int UX410UAK_control_func(void *data)
+{
+	acpi_status result;
+	union acpi_object args[2];
+	unsigned long long value = 0;
+	unsigned long long temp = 0;
+	unsigned long long speed = 0;
+	unsigned int tempBelowMinMs = 0;
+	unsigned long long defaultFanSpeed0 = 0;
+  params.count = ARRAY_SIZE(args);
+  params.pointer = args;
+	args[0].type = ACPI_TYPE_INTEGER;
+	args[0].integer.value = 0;
+	args[1].type = ACPI_TYPE_INTEGER;
+	args[1].integer.value = 0;
+	// get initial value of first entry in fan speed table
+	params.count = 1;
+	args[0].integer.value = 0x548;
+	result = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.RRAM", &params, &defaultFanSpeed0);
+	if (result == AE_OK && defaultFanSpeed0 > 0)
+	{
+		info_msg("init", "Default minimum fan speed value is %d", defaultFanSpeed0);
+	}
+	else
+	{
+		info_msg("init", "Failed to read minimum fan speed value. Defaulting to 87");
+		defaultFanSpeed0 = 47;
+	}
+	speed = defaultFanSpeed0;
+	params.count = ARRAY_SIZE(args);
+	info_msg("init", "Starting control thread");
+	while (!kthread_should_stop())
+	{
+		// get temperature
+		result = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH0R", NULL, &temp);
+		if (result == AE_OK)
+		{
+			if (temp <= TEMP_MIN)
+			{
+				if (tempBelowMinMs >= TURN_OFF_AFTER_MS)
+				{
+          // temperature has been low for some time. set minimum fan speed in fan speed table to 0
+					//info_msg("run", "Temperature %d°C, turning fan off", temp);
+					speed = 0;
+				}
+				else
+				{
+					tempBelowMinMs += SLEEP_INTERVAL_MS;
+				}
+			}
+			else
+			{
+				// temperature too high. reset minimum fan speed in fan speed table to default
+				//info_msg("run", "Temperature %d°C, turning fan on", temp);
+				speed = defaultFanSpeed0;
+				tempBelowMinMs = 0;
+			}
+			args[0].integer.value = 0x548;
+			args[1].integer.value = speed;
+			result = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.WRAM", &params, &value);
+		}
+		// check if one of the previous calls went wrong
+		if (result != AE_OK)
+		{
+			// failsafe. getting temperature failed. switch to auto mode to be safe
+			info_msg("run", "Temperature above limit or ACPI call failed. Setting fan to auto mode");
+			args[0].integer.value = 0x521;
+			args[1].integer.value = 0x85;
+			acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.WRAM", &params, &value);
+			tempBelowMinMs = 0;
+		}
+		msleep_interruptible(SLEEP_INTERVAL_MS);
+	}
+	return 0;
+}
+
 static int __init fan_init(void) {
   acpi_status ret;
   int rpm;
@@ -925,6 +1052,10 @@ static int __init fan_init(void) {
 
     // step by step probe available functionalities and insert into attrib grp
     // @TODO TODO TODO TODO 
+    if (!strcmp(dmi_get_system_info(DMI_PRODUCT_NAME), "UX410UAK"))
+    {
+      asus_data.variant = ASUS_FAN_HW_UX410UAK;
+    }
 		
 		size_t temp = AE_OK;
     // USE this for idx in hwmon_attrs size_t idx = 0;
@@ -1009,6 +1140,12 @@ static int __init fan_init(void) {
            dev_name(asus_data.asus_fan_obj->hwmon_dev));
   info_msg("init", "finished init, found %d fan(s) to control",
            (unsigned int)asus_data.has_gfx_fan + 1);
+
+  if (asus_data.variant == ASUS_FAN_HW_UX410UAK)
+  {
+	control_task = kthread_run(&UX410UAK_control_func, NULL, "asus_fan");
+  }
+
   return 0;
 }
 
@@ -1019,10 +1156,12 @@ void asus_fan_unregister_driver(struct asus_fan_driver *driver) {
 }
 
 static void __exit fan_exit(void) {
+  if (control_task) {
+    kthread_stop(control_task);
+  }
   fan_set_auto();
   asus_fan_unregister_driver(&asus_fan_driver);
   used = false;
-
   info_msg("exit", "module unloaded---cleaning up");
 }
 
