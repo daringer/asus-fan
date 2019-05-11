@@ -24,7 +24,7 @@ The following Notebooks should be supported - be aware that it's still not in pr
 Single Fan | Two Fans (NVIDIA)  | Limited or no support^{1}
 -----------|--------------------|--------------------------
 UX21E      | UX32VD             | UX3300UAR
-UX31E      | UX42VS             | UX3410UA
+UX31E      | UX42VS             | UX3410UA / UX410UAK
 UX21A      | UX52VS             | Zenbook 3U
 UX31A      | U500VZ             |
 UX32A      | NX500              | 
