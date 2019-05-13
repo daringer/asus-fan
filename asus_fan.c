@@ -124,12 +124,12 @@ struct asus_fan_data {
 
 
 static struct asus_fan_data asus_data = {
-    NULL, 
-		{-1, -1}, 
-		{false, false}, 
-		false, false, 
+    NULL,
+		{-1, -1},
+		{false, false},
+		false, false,
 		255, 255,
-    10, 10,       
+    10, 10,
 		"CPU Fan", "GFX Fan",
 		ASUS_FAN_HW_DEFAULT
 };
@@ -142,6 +142,9 @@ static struct acpi_object_list params;
 
 // force loading i.e., skip device existance check
 static short force_load = false;
+
+// allow checking but override rpm check
+static short force_rpm_override = false;
 
 // housekeeping structs
 static struct asus_fan_driver asus_fan_driver = {
@@ -160,6 +163,9 @@ static struct attribute_group platform_attribute_group = {
 module_param(force_load, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(force_load,
                  "Force loading of module---omit device existance check");
+module_param(force_rpm_override, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(force_rpm_override,
+                 "Force loading of module---still do device existance check");
 
 //////
 ////// FUNCTION PROTOTYPES
@@ -494,9 +500,9 @@ static ssize_t _fan_set_mode(int fan, const char* buf, size_t count) {
 		fan_set_auto();
 	} else if (strncmp(buf, fan_mode_manual_string, strlen(fan_mode_manual_string)) == 0)
 		__fan_set_cur_state(0, (255 - asus_data.fan_minimum) >> 1);
-	else 
-  	err_msg("set mode", "fan id: %d | setting mode to '%s', use 'auto' or 'manual'", fan+1, buf); 
-	
+	else
+  	err_msg("set mode", "fan id: %d | setting mode to '%s', use 'auto' or 'manual'", fan+1, buf);
+
   return count;
 }
 
@@ -808,7 +814,7 @@ __ATTRIBUTE_GROUPS(hwmon_attr);
 static int asus_fan_hwmon_init(struct asus_fan *asus) {
 
   dbg_msg("init hwmon device");
-  
+
   asus->hwmon_dev = hwmon_device_register_with_groups(
       &asus->platform_device->dev, "asus_fan", asus, hwmon_attr_groups);
 
@@ -924,13 +930,13 @@ static int __init fan_init(void) {
                      "ASUSTeK COMPUTER INC.")) {
 
     // step by step probe available functionalities and insert into attrib grp
-    // @TODO TODO TODO TODO 
-		
+    // @TODO TODO TODO TODO
+
 		size_t temp = AE_OK;
     // USE this for idx in hwmon_attrs size_t idx = 0;
     // try to get RPM for first fan
     rpm = __fan_rpm(0);
-    if (rpm == -1) {
+    if (rpm == -1 && !force_rpm_override) {
       asus_data.has_fan = false;
       err_msg("init", "fan-id: 1 | failed to get rpm");
     } else {
@@ -946,7 +952,7 @@ static int __init fan_init(void) {
     }
     // try to get RPM for second fan
     rpm = __fan_rpm(1);
-    if (rpm == -1) {
+    if (rpm == -1 && !force_rpm_override) {
       err_msg("init", "fan-id: 2 | failed to get rpm");
       asus_data.has_gfx_fan = false;
     } else {
