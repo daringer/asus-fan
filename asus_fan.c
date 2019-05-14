@@ -937,7 +937,7 @@ static int __init fan_init(void) {
     // try to get RPM for first fan
     rpm = __fan_rpm(0);
     if (force_rpm_override){
-      info_mesg("init", "overriding rpm check: USE WITH CARE");
+      info_msg("init", "overriding rpm check: USE WITH CARE");
     }
     if (rpm == -1 && !force_rpm_override) {
       asus_data.has_fan = false;
