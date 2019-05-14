@@ -936,6 +936,9 @@ static int __init fan_init(void) {
     // USE this for idx in hwmon_attrs size_t idx = 0;
     // try to get RPM for first fan
     rpm = __fan_rpm(0);
+    if (force_rpm_override){
+      info_mesg("init", "overriding rpm check: USE WITH CARE");
+    }
     if (rpm == -1 && !force_rpm_override) {
       asus_data.has_fan = false;
       err_msg("init", "fan-id: 1 | failed to get rpm");
