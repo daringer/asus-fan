@@ -616,7 +616,8 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     ret = acpi_evaluate_integer(NULL, "\\_SB.ATKD.QMOD", &params, &value);
     if (ret != AE_OK) {
       err_msg("set_max_speed",
-              "set max fan speed(s) failed (force reset)! errcode: %d", ret);
+              "set max fan speed(s) failed (force reset)! errcode: %s",
+              acpi_format_exception(ret));
       return ret;
     }
 
@@ -637,7 +638,8 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
                                 &value);
     if (ret != AE_OK) {
       err_msg("set_max_speed",
-              "set max fan speed(s) failed (no reset) errcoded", ret);
+              "set max fan speed(s) failed (no reset) errcode: %s",
+              acpi_format_exception(ret));
 
       return ret;
     }
@@ -680,8 +682,8 @@ static int fan_set_auto() {
   if (ret != AE_OK) {
     err_msg("set_auto",
             "failed reseting fan(s) to auto-mode! "
-            "errcode: %d - DANGER! OVERHEAT? DANGER!",
-            ret);
+            "errcode: %s - DANGER! OVERHEAT? DANGER!",
+            acpi_format_exception(ret));
 
     return ret;
   }
@@ -737,7 +739,8 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
   // acpi call
   ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
   if (ret != AE_OK) {
-    err_msg("read_temp", "failed reading temperature, errcode: %d", ret);
+    err_msg("read_temp", "failed reading temperature, errcode: %s",
+     acpi_format_exception(ret));
     return ret;
   }
   size = sprintf((char *)&buf, "%llu\n", value);
@@ -989,8 +992,8 @@ static int __init fan_init(void) {
     // check if reseting fan speeds works
     ret = fan_set_max_speed(asus_data.max_fan_speed_default, false);
     if (ret != AE_OK) {
-      err_msg("init", "set max speed to: '%d' failed! errcode: %d",
-              asus_data.max_fan_speed_default, ret);
+      err_msg("init", "set max speed to: '%d' failed! errcode: %s",
+              asus_data.max_fan_speed_default, acpi_format_exception(ret));
       return -ENODEV;
     }
 
