@@ -446,8 +446,7 @@ static int __fan_rpm(int fan) {
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params,
                                 &value);
-
-    dbg_msg("|--> acpi request returned: %d", (unsigned int)ret);
+    dbg_msg("|--> acpi request returned: %s", acpi_format_exception(ret));
     if (ret != AE_OK)
       return -1;
   }
@@ -995,22 +994,24 @@ static int __init fan_init(void) {
       return -ENODEV;
     }
 
-    dbg_msg("fan_set_max_speed() call succeeded, ret: %d", (unsigned int)ret);
+    dbg_msg("fan_set_max_speed() call succeeded, ret: %s",
+     acpi_format_exception(ret));
 
     // force sane enviroment / init with automatic fan controlling
     if ((ret = fan_set_auto()) != AE_OK) {
-      err_msg("init", "set auto-mode speed to active, failed! errcode: %d",
-              ret);
+      err_msg("init", "set auto-mode speed to active, failed! errcode: %s",
+              acpi_format_exception(ret));
       return -ENODEV;
     }
 
-    dbg_msg("fan_set_auto() call succeeded, ret: %d", (unsigned int)ret);
+    dbg_msg("fan_set_auto() call succeeded, ret: %s",
+     acpi_format_exception(ret));
   }
 
   ret = asus_fan_register_driver(&asus_fan_driver);
   if (ret != AE_OK) {
-    err_msg("init", "set max speed to: '%d' failed! errcode: %d",
-            asus_data.max_fan_speed_default, ret);
+    err_msg("init", "set max speed to: '%d' failed! errcode: %s",
+            asus_data.max_fan_speed_default, acpi_format_exception(ret));
     return ret;
   }
 
