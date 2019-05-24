@@ -124,12 +124,12 @@ struct asus_fan_data {
 
 
 static struct asus_fan_data asus_data = {
-    NULL, 
-		{-1, -1}, 
-		{false, false}, 
-		false, false, 
+    NULL,
+		{-1, -1},
+		{false, false},
+		false, false,
 		255, 255,
-    10, 10,       
+    10, 10,
 		"CPU Fan", "GFX Fan",
 		ASUS_FAN_HW_DEFAULT
 };
@@ -142,6 +142,9 @@ static struct acpi_object_list params;
 
 // force loading i.e., skip device existance check
 static short force_load = false;
+
+// allow checking but override rpm check
+static short force_rpm_override = false;
 
 // housekeeping structs
 static struct asus_fan_driver asus_fan_driver = {
@@ -160,6 +163,9 @@ static struct attribute_group platform_attribute_group = {
 module_param(force_load, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 MODULE_PARM_DESC(force_load,
                  "Force loading of module---omit device existance check");
+module_param(force_rpm_override, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(force_rpm_override,
+                 "Force loading of module---still do device existance check");
 
 //////
 ////// FUNCTION PROTOTYPES
@@ -440,8 +446,7 @@ static int __fan_rpm(int fan) {
     // acpi call
     ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TACH", &params,
                                 &value);
-
-    dbg_msg("|--> acpi request returned: %d", (unsigned int)ret);
+    dbg_msg("|--> acpi request returned: %s", acpi_format_exception(ret));
     if (ret != AE_OK)
       return -1;
   }
@@ -494,9 +499,9 @@ static ssize_t _fan_set_mode(int fan, const char* buf, size_t count) {
 		fan_set_auto();
 	} else if (strncmp(buf, fan_mode_manual_string, strlen(fan_mode_manual_string)) == 0)
 		__fan_set_cur_state(0, (255 - asus_data.fan_minimum) >> 1);
-	else 
-  	err_msg("set mode", "fan id: %d | setting mode to '%s', use 'auto' or 'manual'", fan+1, buf); 
-	
+	else
+  	err_msg("set mode", "fan id: %d | setting mode to '%s', use 'auto' or 'manual'", fan+1, buf);
+
   return count;
 }
 
@@ -611,7 +616,8 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
     ret = acpi_evaluate_integer(NULL, "\\_SB.ATKD.QMOD", &params, &value);
     if (ret != AE_OK) {
       err_msg("set_max_speed",
-              "set max fan speed(s) failed (force reset)! errcode: %d", ret);
+              "set max fan speed(s) failed (force reset)! errcode: %s",
+              acpi_format_exception(ret));
       return ret;
     }
 
@@ -632,7 +638,8 @@ static int fan_set_max_speed(unsigned long state, bool reset) {
                                 &value);
     if (ret != AE_OK) {
       err_msg("set_max_speed",
-              "set max fan speed(s) failed (no reset) errcoded", ret);
+              "set max fan speed(s) failed (no reset) errcode: %s",
+              acpi_format_exception(ret));
 
       return ret;
     }
@@ -675,8 +682,8 @@ static int fan_set_auto() {
   if (ret != AE_OK) {
     err_msg("set_auto",
             "failed reseting fan(s) to auto-mode! "
-            "errcode: %d - DANGER! OVERHEAT? DANGER!",
-            ret);
+            "errcode: %s - DANGER! OVERHEAT? DANGER!",
+            acpi_format_exception(ret));
 
     return ret;
   }
@@ -732,7 +739,8 @@ static ssize_t temp1_input(struct device *dev, struct device_attribute *attr,
   // acpi call
   ret = acpi_evaluate_integer(NULL, "\\_SB.PCI0.LPCB.EC0.TH1R", NULL, &value);
   if (ret != AE_OK) {
-    err_msg("read_temp", "failed reading temperature, errcode: %d", ret);
+    err_msg("read_temp", "failed reading temperature, errcode: %s",
+     acpi_format_exception(ret));
     return ret;
   }
   size = sprintf((char *)&buf, "%llu\n", value);
@@ -808,7 +816,7 @@ __ATTRIBUTE_GROUPS(hwmon_attr);
 static int asus_fan_hwmon_init(struct asus_fan *asus) {
 
   dbg_msg("init hwmon device");
-  
+
   asus->hwmon_dev = hwmon_device_register_with_groups(
       &asus->platform_device->dev, "asus_fan", asus, hwmon_attr_groups);
 
@@ -924,13 +932,16 @@ static int __init fan_init(void) {
                      "ASUSTeK COMPUTER INC.")) {
 
     // step by step probe available functionalities and insert into attrib grp
-    // @TODO TODO TODO TODO 
-		
+    // @TODO TODO TODO TODO
+
 		size_t temp = AE_OK;
     // USE this for idx in hwmon_attrs size_t idx = 0;
     // try to get RPM for first fan
     rpm = __fan_rpm(0);
-    if (rpm == -1) {
+    if (force_rpm_override){
+      info_msg("init", "overriding rpm check: USE WITH CARE");
+    }
+    if (rpm == -1 && !force_rpm_override) {
       asus_data.has_fan = false;
       err_msg("init", "fan-id: 1 | failed to get rpm");
     } else {
@@ -946,7 +957,7 @@ static int __init fan_init(void) {
     }
     // try to get RPM for second fan
     rpm = __fan_rpm(1);
-    if (rpm == -1) {
+    if (rpm == -1 && !force_rpm_override) {
       err_msg("init", "fan-id: 2 | failed to get rpm");
       asus_data.has_gfx_fan = false;
     } else {
@@ -981,27 +992,29 @@ static int __init fan_init(void) {
     // check if reseting fan speeds works
     ret = fan_set_max_speed(asus_data.max_fan_speed_default, false);
     if (ret != AE_OK) {
-      err_msg("init", "set max speed to: '%d' failed! errcode: %d",
-              asus_data.max_fan_speed_default, ret);
+      err_msg("init", "set max speed to: '%d' failed! errcode: %s",
+              asus_data.max_fan_speed_default, acpi_format_exception(ret));
       return -ENODEV;
     }
 
-    dbg_msg("fan_set_max_speed() call succeeded, ret: %d", (unsigned int)ret);
+    dbg_msg("fan_set_max_speed() call succeeded, ret: %s",
+     acpi_format_exception(ret));
 
     // force sane enviroment / init with automatic fan controlling
     if ((ret = fan_set_auto()) != AE_OK) {
-      err_msg("init", "set auto-mode speed to active, failed! errcode: %d",
-              ret);
+      err_msg("init", "set auto-mode speed to active, failed! errcode: %s",
+              acpi_format_exception(ret));
       return -ENODEV;
     }
 
-    dbg_msg("fan_set_auto() call succeeded, ret: %d", (unsigned int)ret);
+    dbg_msg("fan_set_auto() call succeeded, ret: %s",
+     acpi_format_exception(ret));
   }
 
   ret = asus_fan_register_driver(&asus_fan_driver);
   if (ret != AE_OK) {
-    err_msg("init", "set max speed to: '%d' failed! errcode: %d",
-            asus_data.max_fan_speed_default, ret);
+    err_msg("init", "set max speed to: '%d' failed! errcode: %s",
+            asus_data.max_fan_speed_default, acpi_format_exception(ret));
     return ret;
   }
 
