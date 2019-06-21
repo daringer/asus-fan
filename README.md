@@ -15,9 +15,6 @@ ASUS (Zenbook) fan(s) control and monitor kernel module.
 - [ToDos](#todos)
 - [ThanksTo](#thanks-to)
 
-**Currently `asus-fan` is not actively maintained/improved, because I am lacking a Zenbook. This will change in the near future and as likely it will be a recent one, chances are good that support for the more recent Zenbook models will also then be targeted. Contributions are highly appreciated in the meantime...**
-
-
 ## Compatibilty
 The following Notebooks should be supported - be aware that it's still not in production state
 
