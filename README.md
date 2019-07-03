@@ -2,18 +2,23 @@
 
 ASUS (Zenbook) fan(s) control and monitor kernel module.
 
-- [Compatibilty](#compatibilty)
-- [Installation with DKMS](#installation-with-dkms)
-  - [ArchLinux](#archlinux)
-  - [Ubuntu](#ubuntu)
-- [Quickstart](#quickstart)
-- [Short Comparison To Other Similar Projects](#short-comparison-to-other-similar-projects)
-- [Tools/Configs/Misc](#tools--configs--simple-fancontrol-script)
-  - [fancontrol script](#fancontrol-script)
-  - [build module in debug-mode](#debug-module)
-  - [force loading of module](#force-load)
-- [ToDos](#todos)
-- [ThanksTo](#thanks-to)
+- [**asus-fan**](#asus-fan)
+  - [Compatibilty](#Compatibilty)
+  - [Installation with DKMS](#Installation-with-DKMS)
+    - [Ubuntu](#Ubuntu)
+      - [Scripted Ubuntu DKMS Setup for Asus Fan Module](#Scripted-Ubuntu-DKMS-Setup-for-Asus-Fan-Module)
+      - [<a name="ubuntu-symlink">Ubuntu - Symlink Creation on reboot</a>](#a-nameubuntu-symlinkUbuntu---Symlink-Creation-on-reboota)
+      - [Manual Ubuntu DKMS Setup for Asus Fan Module](#Manual-Ubuntu-DKMS-Setup-for-Asus-Fan-Module)
+    - [ArchLinux](#ArchLinux)
+  - [Troubleshooting Symlinks](#Troubleshooting-Symlinks)
+  - [<a name="quickstart">Quickstart - Manual installation</a>](#a-namequickstartQuickstart---Manual-installationa)
+  - [Short Comparison To Other Similar Projects](#Short-Comparison-To-Other-Similar-Projects)
+  - [Tools / Configs / Simple Fancontrol Script](#Tools--Configs--Simple-Fancontrol-Script)
+    - [fancontrol script](#fancontrol-script)
+    - [debug module](#debug-module)
+    - [force load module](#force-load-module)
+  - [TODOs:](#TODOs)
+  - [THANKS TO:](#THANKS-TO)
 
 **Currently `asus-fan` is not actively maintained/improved, because I am lacking a Zenbook. This will change in the near future and as likely it will be a recent one, chances are good that support for the more recent Zenbook models will also then be targeted. Contributions are highly appreciated in the meantime...**
 
@@ -24,7 +29,7 @@ The following Notebooks should be supported - be aware that it's still not in pr
 Single Fan | Two Fans (NVIDIA)  | Limited or no support^{1}
 -----------|--------------------|--------------------------
 UX21E      | UX32VD             | UX3300UAR
-UX31E      | UX42VS             | UX3410UA / UX410UAK
+UX31E      | UX42VS             | UX3410U(A) / UX410U(AK)
 UX21A      | UX52VS             | Zenbook 3U
 UX31A      | U500VZ             |
 UX32A      | NX500              | 

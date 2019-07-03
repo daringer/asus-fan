@@ -8,7 +8,7 @@ ifeq ($(DEBUG), 1)
 endif
 
 
-obj-m := asus_fan.o
+obj-m := asus_fan.o mach_base.o mach_default.o mach_ux410uak.o machines.o
 
 all:
 	make -C $(KDIR) M=$$PWD modules
