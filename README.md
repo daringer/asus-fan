@@ -29,6 +29,7 @@ UX301LA    | UX32LN             |
 UX302LA    | UX303LB            |
 N551JK     | N552VX             |
 N56JN      | N550JV             |
+UX303UB    |                    |
 
 ## Installation with DKMS
 Dynamic Kernel Module Support (DKMS) is a program/framework that enables generating Linux kernel modules whose sources generally reside outside the kernel source tree. The concept is to have DKMS modules automatically rebuilt when a new kernel is installed. -  [Wikipedia](https://en.wikipedia.org/wiki/Dynamic_Kernel_Module_Support)
