@@ -1,6 +1,8 @@
 # **asus-fan**
 
-ASUS (Zenbook) fan(s) control and monitor kernel module.
+ASUS (Zenbook) fan(s) control and monitor kernel module. 
+
+<a href="https://www.buymeacoffee.com/daringer" target="_blank"> <img src="https://cdn.buymeacoffee.com/buttons/lato-green.png" alt="Buy Me A Coffee Or Beer" height=22></a>
 
 - [Compatibilty](#compatibilty)
 - [Installation with DKMS](#installation-with-dkms)
