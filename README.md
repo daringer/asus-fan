@@ -111,7 +111,7 @@ Just get the [PKGBUILD](https://raw.githubusercontent.com/daringer/asus-fan/mast
     cd /tmp
     mkdir asus-fan-build 
     cd asus-fan-build 
-    wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
+    wget wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/PKGBUILD
     wget https://raw.githubusercontent.com/daringer/asus-fan/master/buildscripts/archlinux/asus-fan-dkms-git/asus-fan-dkms-git.install 
     makepkg
     sudo pacman -U asus-fan-dkms-git-*.pkg.tar.xz
