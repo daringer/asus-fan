@@ -1,6 +1,6 @@
 PKGVER="$(ls /usr/src/ | grep 'asus_fan' | cut -d '-' -f 2)"
 _dkms="/usr/bin/dkms"
-
+_sysctl="/usr/bin/systemctl"
 
 post_install() {
   ${_dkms} add -m "asus_fan/${PKGVER}"
@@ -8,7 +8,7 @@ post_install() {
   ${_dkms} install -m "asus_fan/${PKGVER}"
 
   echo "Enabling asus-fan as service in systemd"
-  systemctl enable asus-fan.service
+  ${_sysctl} enable asus-fan.service
 }
 
 post_upgrade() {
@@ -25,5 +25,6 @@ pre_upgrade() {
 
 post_remove() {
   depmod -a
+  ${_sysctl} disable asus-fan.service
 }
 
