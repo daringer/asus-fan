@@ -1,6 +1,6 @@
 PKGVER="$(ls /usr/src/ | grep 'asus_fan' | cut -d '-' -f 2)"
 _dkms="/usr/bin/dkms"
-_sysctl="/usr/bin/xsystemctl"
+_sysctl="/usr/bin/systemctl"
 
 post_install() {
   ${_dkms} add -m "asus_fan/${PKGVER}"
