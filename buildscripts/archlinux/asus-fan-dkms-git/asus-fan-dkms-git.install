@@ -1,6 +1,6 @@
 PKGVER="$(ls /usr/src/ | grep 'asus_fan' | cut -d '-' -f 2)"
 _dkms="/usr/bin/dkms"
-
+_sysctl="/usr/bin/systemctl"
 
 post_install() {
   ${_dkms} add -m "asus_fan/${PKGVER}"
@@ -8,7 +8,13 @@ post_install() {
   ${_dkms} install -m "asus_fan/${PKGVER}"
 
   echo "Enabling asus-fan as service in systemd"
-  systemctl enable asus-fan.service
+	if (which ${_sysctl} &> /dev/null); then
+    ${_sysctl} enable asus-fan.service
+	else
+		echo "Warning: no '${_sysctl}' found, continuing..."
+		echo "=> consider starting 'misc/asus-fan-create-symlinks.sh' to"
+		echo "=> get asus-fan symlinks in: '/tmp/asus-fan-shm' on system startup"
+	fi
 }
 
 post_upgrade() {
@@ -25,5 +31,8 @@ pre_upgrade() {
 
 post_remove() {
   depmod -a
+	if (which ${_sysctl} &> /dev/null); then
+    ${_sysctl} disable asus-fan.service
+	fi
 }
 

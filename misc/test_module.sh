@@ -79,6 +79,8 @@ r_searchsysfiles=0
 r_testfan1func=0
 r_testfan2func=0
 
+load_module_params="$1"
+
 
 info "$_h Starting '$modname' kernel module quick test"
 
@@ -90,12 +92,20 @@ info "Clearing 'dmesg' (kernel) log"
 sudo dmesg -c > /dev/null
 
 info "Trying to modprobe the module: '$realmod'"
-sudo modprobe $realmod
+sudo modprobe $realmod $load_module_params
 if callres $?; then
 	good "Successfully inserted module: '$realmod'"
 else
-	bad "Could not modprobe the module: '$realmod'"
-	r_housekeeping=1
+	info "Could not modprobe the module: '$realmod'"
+	info "Will try to find the module (.ko file) (starting in '../')"
+	ko_path=`find .. -name ${realmod}.ko | head -n 1`
+	if callres $?; then
+	    good "looks like I found: ${ko_path}, trying insmod directly"
+	    sudo insmod ${ko_path} $load_module_params
+        else
+	    bad "Nothing found---start this script from inside the repository!"
+            r_housekeeping=1
+	fi
 fi
 
 

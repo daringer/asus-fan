@@ -75,6 +75,11 @@ run_sudo_command mv dkms.conf dkms.conf.archlinux # Rename Archlinux version to 
 run_sudo_command mv dkms-ubuntu.conf dkms.conf # Rename Ubuntu version to the correct name
 cd ..
 }
+function installsymlinkcreationscript(){
+  if [ ! -f  /usr/local/sbin/asus-fan-create-symlinks.sh ]; then
+    run_sudo_command cp misc/asus-fan-create-symlinks.sh /usr/local/sbin/
+  fi
+}
 function buildmodule(){
   echo -e "${yellow}>>>> ${NC}Now building the asus_fan module."
   run_sudo_command dkms add -m asus_fan -v master
@@ -104,7 +109,7 @@ function finished(){
 checkforasusfanmodule
 [ $wasmoduleloadewithdkms = 0 ] && removeasusfandkms
 downloadandunpack
-
+installsymlinkcreationscript
 [ $wasmoduleloadedmanually = 0 ] && renamemanuallyinstalledmodule
 buildmodule
 addtoetcmodules
