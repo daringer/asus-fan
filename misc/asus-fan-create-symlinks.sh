@@ -14,17 +14,6 @@ function usage() {
    exit;
 }
 
-# This function is used to check the Linux distribution and release version.
-# Currently we are checking for Ubuntu as some paths are different.
-function linuxdistroandversioncheck(){
-  linuxdistro="unknown" # Set it so that the variable is present when we check it.
-  linuxdistro=$(lsb_release -si &>/dev/null)
-#  linuxarch=$(uname -m | sed 's/x86_//;s/i[3-6]86/32/') # Currently not using for possible future use.
-#  linuxversion=$(lsb_release -sr) # Currently not using for possible future use.
-}
-
-linuxdistroandversioncheck
-
 [[ "$1" = "-h" || "$1" = "--help" ]] && usage
 [[ "$1" != "" ]] && d="$1"
 
@@ -42,19 +31,9 @@ rm -f ${d}/*_temp ${d}/fan_*
 # temps
 ln -s /sys/devices/virtual/hwmon/hwmon*/temp1_input ${d}/tz1_temp
 ln -s /sys/devices/platform/asus-nb-wmi/hwmon/hwmon*/temp1_input ${d}/tz2_temp
-
-case $linuxdistro in
-
-  Ubuntu)  ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon?/*/temp1_input ${d}/die_temp
-           ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon?/*/temp2_input ${d}/core1_temp
-           ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon?/*/temp3_input ${d}/core2_temp
-      ;;
-
-       *)  ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp1_input ${d}/die_temp
-           ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp2_input ${d}/core1_temp
-           ln -s /sys/devices/platform/coretemp.0/hwmon/hwmon*/temp3_input ${d}/core2_temp
-      ;;
-esac
+ln -s $(find /sys/devices/platform/coretemp.0/ -name "temp1_input") ${d}/die_temp
+ln -s $(find /sys/devices/platform/coretemp.0/ -name "temp2_input") ${d}/core1_temp
+ln -s $(find /sys/devices/platform/coretemp.0/ -name "temp3_input") ${d}/core2_temp
 
 # fan interface
 [ -r ${hwmon_dir}/pwm1 ] && \
