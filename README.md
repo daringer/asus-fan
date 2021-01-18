@@ -47,7 +47,7 @@ More information on DKMS: [Ubuntu Help - DKMS](https://help.ubuntu.com/community
 * Make sure the script is executable (ie. `chmod +x ubuntu_dkms_sudo_install.sh`)
 * Run the script (ie. `./ubuntu_dkms_sudo_install.sh`)
 * The script will need super user powers and will ask you to enter your password to get sudo permissions
-* Check that the module has been built and installed with `lsmod | grep asus_fan`. If you get something lik **asus_fan               14880  0** you are good. If you get nothing the module is not loaded.
+* Check that the module has been built and installed with `lsmod | grep asus_fan`. If you get something like **asus_fan               14880  0** you are good. If you get nothing the module is not loaded.
 
 #### <a name="ubuntu-symlink">Ubuntu - Symlink Creation on reboot</a>
 
@@ -55,7 +55,8 @@ Symlinks will need to be created each time. The `asus-fan-create-symlinks.sh` is
 
 If you used the `ubuntu_dkms_sudo_install.sh` installation script above the `asus-fan-ubuntu-create-symlinks.sh` will have been installed at `/usr/local/sbin/asus-fan-create-symlinks.sh`.
 
-For Ubuntu 14.04 using the Upstart init system add the following to the Thermald upstart configuration file, `/etc/init/thermald.conf
+##### Symlink creation using Upstart init system
+For Ubuntu 14.04 using the Upstart init system add the following to the Thermald upstart configuration file, `/etc/init/thermald.conf`
 
 ``` bash
 pre-start script
@@ -82,6 +83,29 @@ stop on stopping dbus
 # don't respawn on error
 #
 normal exit 1
+```
+
+##### Symlink creation using systemd init system
+For newer Ubuntu versions that use `systemd` init system the following line can be added to `/etc/systemd/system/dbus-org.freedesktop.thermald.service`  in the `[Service]` section to create the links when thermald starts.
+
+`ExecStartPre=/usr/local/sbin/asus-fan-create-symlinks.sh`
+
+With this line added on Ubuntu 18.04 `/etc/systemd/system/dbus-org.freedesktop.thermald.service` looks like this:
+
+```bash
+[Unit]
+Description=Thermal Daemon Service
+
+[Service]
+Type=dbus
+SuccessExitStatus=1
+BusName=org.freedesktop.thermald
+ExecStartPre=/usr/local/sbin/asus-fan-create-symlinks.sh
+ExecStart=/usr/sbin/thermald --no-daemon --dbus-enable
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-org.freedesktop.thermald.service
 ```
 
 #### Manual Ubuntu DKMS Setup for Asus Fan Module
