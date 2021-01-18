@@ -55,6 +55,7 @@ Symlinks will need to be created each time. The `asus-fan-create-symlinks.sh` is
 
 If you used the `ubuntu_dkms_sudo_install.sh` installation script above the `asus-fan-ubuntu-create-symlinks.sh` will have been installed at `/usr/local/sbin/asus-fan-create-symlinks.sh`.
 
+##### Symlink creation using Upstart init system
 For Ubuntu 14.04 using the Upstart init system add the following to the Thermald upstart configuration file, `/etc/init/thermald.conf`
 
 ``` bash
@@ -82,6 +83,29 @@ stop on stopping dbus
 # don't respawn on error
 #
 normal exit 1
+```
+
+##### Symlink creation using systemd init system
+For newer Ubuntu versions that use `systemd` init system the following line can be added to `/etc/systemd/system/dbus-org.freedesktop.thermald.service`  in the `[Service]` section to create the links when thermald starts.
+
+`ExecStartPre=/usr/local/sbin/asus-fan-create-symlinks.sh`
+
+With this line added on Ubuntu 18.04 `/etc/systemd/system/dbus-org.freedesktop.thermald.service` looks like this:
+
+```bash
+[Unit]
+Description=Thermal Daemon Service
+
+[Service]
+Type=dbus
+SuccessExitStatus=1
+BusName=org.freedesktop.thermald
+ExecStartPre=/usr/local/sbin/asus-fan-create-symlinks.sh
+ExecStart=/usr/sbin/thermald --no-daemon --dbus-enable
+
+[Install]
+WantedBy=multi-user.target
+Alias=dbus-org.freedesktop.thermald.service
 ```
 
 #### Manual Ubuntu DKMS Setup for Asus Fan Module
