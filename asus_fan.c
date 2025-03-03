@@ -296,7 +296,7 @@ static void asus_fan_sysfs_exit(struct platform_device *device);
 static int asus_fan_probe(struct platform_device *pdev);
 
 // do anything needed to remove platform device
-static int asus_fan_remove(struct platform_device *device);
+static void asus_fan_remove(struct platform_device *device);
 
 // prepare platform device and let it create
 int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver);
@@ -871,7 +871,7 @@ fail_hwmon:
   return err;
 }
 
-static int asus_fan_remove(struct platform_device *device) {
+static void asus_fan_remove(struct platform_device *device) {
   struct asus_fan *asus;
 
   dbg_msg("remove asus_fan");
@@ -879,7 +879,6 @@ static int asus_fan_remove(struct platform_device *device) {
   asus = platform_get_drvdata(device);
   asus_fan_sysfs_exit(asus->platform_device);
   kfree(asus);
-  return 0;
 }
 
 int __init_or_module asus_fan_register_driver(struct asus_fan_driver *driver) {
